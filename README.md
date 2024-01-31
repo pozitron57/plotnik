@@ -79,7 +79,7 @@ with plotnik.Drawing() as d:
 ![image](https://github.com/pozitron57/plotnik/assets/9392655/673919fa-3dd1-4c92-997e-acf23d9e8c40)
 
 ### 3 (Carnot cycle in PV coordinates)
-
+``` python
 import plotnik
 from plotnik.processes import *
 
@@ -88,7 +88,6 @@ v1 = 3
 v2 = 6
 v3 = 10
 
-``` python
 with plotnik.Drawing() as d:
     d.set_config(
         fontsize=30,
