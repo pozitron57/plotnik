@@ -1,16 +1,15 @@
-`plotnik` is a Python library for creating simple graphs using `matplotlib` in Cartesian
-coordinates in the style of 'school' graphs used in Russian tradition in physics and mathematics
-problems. It was developed for convenient drawing thermodynamic cycles, including nonlinear
-processes.
+`plotnik` is a Python library designed for creating simple graphs using matplotlib in Cartesian coordinates,
+mirroring the style of 'school' graphs traditionally used in Russian physics and mathematics education.
+It was developed for convenient drawing thermodynamic cycles, including nonlinear processes.
 
-The library is already usable but in an early stage of development.
-No full documentation is available, but you may use some examples below to get
-the idea.
+The library is currently usable but still in an early stage of development.
+Full documentation is not yet available, but you can refer to the examples
+provided below to understand its functionality.
 
 The library utilizes syntax inspired by the
 [SchemDraw](https://github.com/cdelker/schemdraw) library.
 
-The code is written almost entirely by Chat-GPT.
+The code has been written almost entirely by Chat-GPT.
 
 ## Basic usage
 
@@ -27,10 +26,11 @@ with plotnik.Drawing() as d:
 
 ```
 
-`crop=True` works only with svg files. Requires `Inkscape` installation on your machine.
-It removes paths with names `patch_1` and `patch_2` which in my case contains no paths.
+`crop=True` is only compatible with SVG files and requires the installation of `Inkscape` on your machine.
+This feature removes paths named `patch_1` and `patch_2`, which, in my case, do not contain any paths.
 
-Standard font is "STIX Two Text". Use `d.set_config(font='serif')` to get computer modern roman (need latex to be installed on your machine).
+The default font is 'STIX Two Text'. To switch to Computer Modern Roman, use `d.set_config(font='serif')`,
+noting that this requires LaTeX to be installed on your machine.
 
 To draw the lines, you may use `processes`: class `Process()` with its subclasses:
 
@@ -38,12 +38,12 @@ To draw the lines, you may use `processes`: class `Process()` with its subclasse
   Draw a straight line from .at() to .to().
 
 - `Power()`
-  Connect initial and last points with y=k*x\**n + b
+  Connects initial and final points with the equation y=k*x^n + b
 
 - `Adiabatic()`
   Draw adiabatic process pV^gamma = const for p(V) coordinates.
-  Set gamma: Adiabatic(gamma=7/5) (default value is 5/3).
-
+  Set the gamma value using `Adiabatic(gamma=7/5)`, with the default being 5/3.
+  
 - `Iso_t()`
   Isothermal process pV=const in p(V) coordinates.
 
@@ -56,11 +56,11 @@ To draw the lines, you may use `processes`: class `Process()` with its subclasse
   Similarly,
 
       d += Bezier(x1=3,y1=7, x2=5,y2=3).at(1,5).to(7,5)
-    
-  plots a cubic Bezier curve (sine-like) with two control points (x1,y1) and (x2,y2).
 
-Otherwise, you can also use standard matplotlib syntax to add text and lines to
-the plot, such as `d.ax.plot(x,y)`.
+  this code plots a cubic Bezier curve, resembling a sine wave, with two control points at (x1, y1) and (x2, y2).
+
+Additionally, standard matplotlib syntax can be used to add text and lines to the plot,
+for example, `d.ax.plot(x, y)`.
 
 
 ## Examples
@@ -142,16 +142,16 @@ with plotnik.Drawing() as d:
         center=[5.5, 4.5],
     )
 
-    # When second argument in .to() is 'volume', it draws a line until volume v2 and calculate
-    # needed pressure for that. Then use end_p(process) to get this pressure value.
+    # When the second argument in the .to() method is 'volume', the function draws a line up to
+    # volume v2 and calculates the required pressure. To retrieve this pressure value, use end_p(process)
     d += (T1:= Iso_t().at(v1, p1).to(v2, 'volume').dot('both').label(1,2) )
     p2 = end_p(T1)
 
     d += (Q1:= Adiabatic().to(v3, 'volume') )
     p3 = end_p(Q1)
 
-    # common_pv calculates v,p where isothermal through the start point and adiabatic process throught the
-    # end point crosses
+    # common_pv calculates the volume (v) and pressure (p) at the intersection of an isothermal process
+    # passing through the start point and an adiabatic process passing through the end point.
     v4, p4 = common_pv(v1,p1, v3,p3)
     d += Iso_t().to(v4, 'volume').dot('both').label(3,4)
 
@@ -179,8 +179,9 @@ with plotnik.Drawing() as d:
 
     d += (B:= Bezier(x1=5,y1=15, x2=6.8,y2=-4).at(1,7).to(11,3).lw(2.4) )
 
-    # B.get_point(index) returns (x,y). Use an asterisk to unpack it to x,y.
-    # Allowed indices are from 0 to 100
+    # B.get_point(index) returns a tuple (x, y).
+    # Use an asterisk to unpack this tuple into x and y.
+    # The allowed index range is from 0 to 100. 
     d += State().at(*B.get_point( 4)).dot().label('A')
     d += State().at(*B.get_point(18)).dot().label('B', start_dx=0)
     d += State().at(*B.get_point(48)).dot().label('C')
@@ -263,7 +264,9 @@ with plotnik.Drawing() as d:
 ![image](https://github.com/pozitron57/plotnik/assets/9392655/bcaacd65-30f0-411d-96f7-f1f0989c0fa1)
 
 ### 7. Bezier().connect() method
-Reproduce a smooth curve that has to pass through the point (3,60).
+
+This method is used to create a smooth curve that must pass through the specified point,
+in this case, (3,60).
 
 ``` python
 import plotnik
@@ -281,7 +284,7 @@ with plotnik.Drawing() as d:
     )
 
     d += (P1:= Power(2).at(0,0).to(3,60).lw(3) )
-    d += (L1:= Linear().at(5,90).to(6,90).lw(0) ) # process needed only to finish Bezier as a tangent to it hence lw=0
+    d += (L1:= Linear().at(5,90).to(6,90).lw(0) ) # This process is used solely to complete the Bezier curve with a tangent, hence 'lw=0' is specified.
     d += Bezier().connect(P1,L1).lw(3)
 
     d.ax.set_xticks([2,4])
@@ -294,10 +297,11 @@ with plotnik.Drawing() as d:
 ![image](https://github.com/pozitron57/plotnik/assets/9392655/0ff9d3d2-fc7b-4fcb-8579-59f208db8560)
 
 ### 8. Bezier().get_coordinates()
-when plot a complex curve as two separate processes (hence two calls of `ax.plot()`)
-with large linewidth there may be a bad connection between it. To avoid it, you can use Bezier() to
-calculate coordinates without plotting it. Then append these coordinates to other process
-and matplotlib will smooth it.
+When plotting a complex curve as two separate processes (thus requiring two calls to `ax.plot()`),
+using a large linewidth may result in poor connections between the segments.
+To resolve this, you can use `Bezier()` to calculate the coordinates without plotting them.
+Then, append these coordinates to the other process.
+Matplotlib will seamlessly join these segments when plotting them in a single `ax.plot()` call.
 
 ``` python
 import plotnik
