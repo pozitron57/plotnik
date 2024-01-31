@@ -5,13 +5,12 @@ processes.
 
 The library is already usable but in an early stage of development.
 No documentation is available, but you may use some examples below to get the idea.
-You may use `processes`, namely
+To drawi lines, you may use `processes`, namely
 `Linear()`,
 `Power()`,
 `Adiabatic()`,
 `Iso_t()`,
 `Bezier()`.
-
 Otherwise, you can also use standard matplotlib syntax to add text and lines to the plot.
 
 The library utilizes syntax inspired by the
@@ -20,7 +19,7 @@ The library utilizes syntax inspired by the
 The code is written almost entirely by Chat-GPT.
 
 ## Examples
-### 1
+### 1. Power()
 ``` python
 import plotnik
 from plotnik.processes import *
@@ -52,7 +51,7 @@ with plotnik.Drawing() as d:
 
 ![image](https://github.com/pozitron57/plotnik/assets/9392655/6f3aa682-4f9e-4b08-b426-9cba5448a094)
 
-### 2
+### 2. Linear() and grid()
 ``` python
 import plotnik
 from plotnik.processes import *
@@ -78,7 +77,7 @@ with plotnik.Drawing() as d:
 ```
 ![image](https://github.com/pozitron57/plotnik/assets/9392655/673919fa-3dd1-4c92-997e-acf23d9e8c40)
 
-### 3 (Carnot cycle in PV coordinates)
+### 3. Carnot cycle in PV coordinates. Adiabatic(), Iso_t().
 ``` python
 import plotnik
 from plotnik.processes import *
@@ -116,7 +115,100 @@ with plotnik.Drawing() as d:
 ```
 ![image](https://github.com/pozitron57/plotnik/assets/9392655/cf1f0a52-f2e7-4e6a-9006-947515c56170)
 
+### 4. Cubic Bezier curve with dots on it
+``` python
+import plotnik
+from plotnik.processes import *
 
+with plotnik.Drawing() as d:
+    d.set_config(yname=r'$x$',
+                 xname=r'$t$',
+                 xlim=[0,12],
+                 center_x=5,
+                 )
+
+    d += (B:= Bezier(x1=5,y1=15, x2=6.8,y2=-4).at(1,7).to(11,3).lw(2.4) )
+
+    d += State().at(*B.get_point( 4)).dot().label('A')
+    d += State().at(*B.get_point(18)).dot().label('B', start_dx=0)
+    d += State().at(*B.get_point(48)).dot().label('C')
+    d += State().at(*B.get_point(91)).dot().label('D')
+
+    d.show()
+```
+
+![image](https://github.com/pozitron57/plotnik/assets/9392655/b08c31dd-6b02-460d-ae2b-830bc6cfa392)
+
+### 5. Power() to create shifted hyperbola y=k/x+b
+```python
+import plotnik
+from plotnik.processes import *
+
+x1 = 3
+y1 = 2
+
+x2 = 2*x1
+y2 = y1
+
+x3 = x1
+y3 = 3*y1
+
+with plotnik.Drawing() as d:
+    d.set_config(
+        fontsize=31,
+        yname='$p$',
+        xname=r'$\rho$',
+        xlim=[0,7.5],
+        ylim=[0,7.5],
+        axes_arrow_width=0.16,
+        zero_x=0.4,
+        )
+
+    d += Linear().at(x1, y1).to(x2,y2).arrow().dot().tox().label(1,2, dy=-0.65)
+    d += Power(power=-0.5).at(x2, y2).to(x3, y3).arrow().label('',3)
+    d += Linear().to(x1,y1).arrow().dot('both').toy()
+
+    d.ax.set_yticks([y1, y3], ['$p_0$', '$3p_0$'])
+    d.ax.set_xticks([x1, x2], [r'$\rho_0$', r'$2\rho_0$'])
+
+    d.show()
+```
+![image](https://github.com/pozitron57/plotnik/assets/9392655/d59e376e-0ef6-4f9e-a02a-cda4878efd36)
+
+### 7. Two Adiabatic() & two Linear()
+``` python
+import plotnik
+from plotnik.processes import *
+
+v1  = 2
+v2  = 5
+p12 = 8
+p34 = 3
+
+with plotnik.Drawing() as d:
+    d.set_config(
+         yname='$p$',
+         xname='$V$',
+         zero_x=0.5,
+         fontsize=28,
+         ylim=[0,10.7],
+         axes_arrow_scale=0.7,
+         center_x=4,
+     )
+
+    a=22
+    d += Linear().at(v1,p12).to(v2,p12).dot('both').arrow(size=a,pos=0.61).label(1,2)
+    d += (Q1:= Adiabatic().at(v1,p12).to(p34, 'pressure').arrow(size=a,reverse=True) )
+    d += (Q2:= Adiabatic().at(v2,p12).to(p34, 'pressure').arrow(size=a) )
+    v3 = end_v(Q1)
+    v4 = end_v(Q2)
+    d += Linear().at(v4,p34).to(v3,p34).dot('both').arrow(size=a)\
+             .label(3,4, dy=-0.8)
+
+    d.show()
+```
+
+![image](https://github.com/pozitron57/plotnik/assets/9392655/bcaacd65-30f0-411d-96f7-f1f0989c0fa1)
 
 ## TODO
 
