@@ -20,8 +20,7 @@ The library utilizes syntax inspired by the
 The code is written almost entirely by Chat-GPT.
 
 ## Examples
-![image](https://github.com/pozitron57/plotnik/assets/9392655/804859b7-2ddb-486f-9463-d6c11fab0ca7)
-
+### 1
 ``` python
 import plotnik
 from plotnik.processes import *
@@ -52,6 +51,33 @@ with plotnik.Drawing() as d:
 ```
 
 ![image](https://github.com/pozitron57/plotnik/assets/9392655/6f3aa682-4f9e-4b08-b426-9cba5448a094)
+
+### 2
+``` python
+import plotnik
+from plotnik.processes import *
+
+u1 = 2
+u2 = 4
+
+v1 = 3
+v2 = 6
+
+with plotnik.Drawing() as d:
+    d.set_config(
+        yname='$U$',
+        xname='$V$',
+        zero_x=0.4,
+        ylim=[0,6],
+        xlim=[0,8],
+    )
+
+    d += Linear().at(v1,u1).to(v2,u2).arrow().dot('both').label(1,2)
+    d.grid(y_end=5)
+    d.show()
+```
+![image](https://github.com/pozitron57/plotnik/assets/9392655/673919fa-3dd1-4c92-997e-acf23d9e8c40)
+
 
 ## TODO
 
