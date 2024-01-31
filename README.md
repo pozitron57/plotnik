@@ -4,19 +4,59 @@ problems. It allows for drawing thermodynamic cycles, including nonlinear
 processes.
 
 The library is already usable but in an early stage of development.
-No documentation is available, but you may use some examples below to get the idea.
-To drawi lines, you may use `processes`, namely
-`Linear()`,
-`Power()`,
-`Adiabatic()`,
-`Iso_t()`,
-`Bezier()`.
-Otherwise, you can also use standard matplotlib syntax to add text and lines to the plot.
+No full documentation is available, but you may use some examples below to get
+the idea.
 
 The library utilizes syntax inspired by the
 [SchemDraw](https://github.com/cdelker/schemdraw) library.
 
 The code is written almost entirely by Chat-GPT.
+
+## Basic usage
+
+``` python
+import plotnik
+from plotnik.processes import *
+
+with plotnik.Drawing() as d:
+    d.set_config() # Set options
+    d += Linear().at(1, 1).to(2, 2).arrow().label(1,2).dot('both').tox().toy()
+    d += Power(0.5).to(3, 3) # takes 2,2 as initial point from previous process
+    d.show()
+    d.save('filename')
+
+```
+
+To draw the lines, you may use `processes`: class `Process()` with its subclasses:
+
+- Linear()
+  Draw a straight line from .at() to .to().
+
+- Power()
+  Connect initial and last points with y=k*x\**n + b
+
+- Adiabatic()
+  Draw adiabatic process pV^gamma = const for p(V) coordinates.
+  Set gamma: Adiabatic(gamma=7/5) (default value is 5/3).
+
+- Iso_t()
+  Isothermal process pV=const in p(V) coordinates.
+
+- Bezier(x,y)
+  Draw quadratic or cubic Bezier curve.
+
+    d += Bezier(x=2,y=2).at(1,1).to(3,1)
+
+  draws quadratic Bezier curve from (1,1) to (3,1) with a single control point at (2,2).
+  Similarly,
+
+    d += Bezier(x1=3,y1=7, x2=5,y2=3).at(1,5).to(7,5)
+    
+  plots a cubic Bezier curve (sine-like) with two control points (x1,y1) and (x2,y2).
+
+Otherwise, you can also use standard matplotlib syntax to add text and lines to
+the plot, such as `d.ax.plot(x,y)`.
+
 
 ## Examples
 ### 1. Power()

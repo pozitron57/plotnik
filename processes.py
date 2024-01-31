@@ -134,30 +134,40 @@ class Process:
         # Вычисляем смещение в зависимости от положения точки
         k = self.config['fontsize'] / 27
         dx = xlen * 0.05 * k if point and point[0] >= center_x else -xlen * 0.05 * k
-        dy = ylen * 0.06 * k if point and point[1] >= center_y else -ylen * 0.05 * k
+        dy = ylen * 0.06 * k if point and point[1] >= center_y else -ylen * 0.07 * k
 
         return (dx, dy)
 
     def label(self, text1=None, text2=None, ofst=None, start_ofst=None, end_ofst=None, 
-              end_dx=None, end_dy=None, start_dx=None, start_dy=None):
+              end_dx=None, end_dy=None, start_dx=None, start_dy=None, dx=None, dy=None):
+        # Применение dx и dy, если они заданы
+        if dx is not None:
+            start_dx = end_dx = dx
+        if dy is not None:
+            start_dy = end_dy = dy
+
+        # Установка start_ofst и end_ofst с учетом индивидуальных смещений
         if start_ofst is None and (start_dx is not None or start_dy is not None):
             start_ofst = (start_dx, start_dy)
 
         if end_ofst is None and (end_dx is not None or end_dy is not None):
             end_ofst = (end_dx, end_dy)
 
+        # Установка ofst, если он задан
+        if ofst is not None:
+            start_ofst = end_ofst = ofst
+
+        # Установка меток для State или для начальной и конечной точек
         if isinstance(self, State):
-            # Для State применяем метку и смещение к единственной точке
             self.start_label = {'text': text1, 'ofst': start_ofst}
         else:
             if text2 is None:
-                # Если задан только один текст, применяем метку к начальной точке
                 self.start_label = {'text': text1, 'ofst': start_ofst}
             else:
-                # Если заданы обе метки, применяем их к начальной и конечной точкам
                 self.start_label = {'text': text1, 'ofst': start_ofst}
                 self.end_label = {'text': text2, 'ofst': end_ofst}
         return self
+
 
 
     def _add_labels(self, ax, config):
