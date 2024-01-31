@@ -4,6 +4,15 @@ problems. It allows for drawing thermodynamic cycles, including nonlinear
 processes.
 
 The library is already usable but in an early stage of development.
+No documentation is available, but you may use some examples below to get the idea.
+You may use `processes`, namely
+`Linear()`,
+`Power()`,
+`Adiabatic()`,
+`Iso_t()`,
+`Bezier()`.
+
+Otherwise, you can also use standard matplotlib syntax to add text and lines to the plot.
 
 The library utilizes syntax inspired by the
 [SchemDraw](https://github.com/cdelker/schemdraw) library.
