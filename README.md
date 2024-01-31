@@ -11,6 +11,7 @@ The library utilizes syntax inspired by the
 The code is written almost entirely by Chat-GPT.
 
 ## Examples
+![image](https://github.com/pozitron57/plotnik/assets/9392655/804859b7-2ddb-486f-9463-d6c11fab0ca7)
 
 ``` python
 import plotnik
@@ -41,6 +42,7 @@ with plotnik.Drawing() as d:
     d.show()
 ```
 
+![image](https://github.com/pozitron57/plotnik/assets/9392655/6f3aa682-4f9e-4b08-b426-9cba5448a094)
 
 ## TODO
 
