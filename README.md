@@ -34,7 +34,7 @@ with plotnik.Drawing() as d:
     d += (P1:= Power().at(v1, u1).to(v2, 'x').arrow().label(1,2).dot('both').tox().toy() )
     y2 = end_y(P1)
 
-    d += Power().at(v2, y2).to(0, 0).ls('--')
+    d += Power().to(0, 0).ls('--')
 
     d.ax.set_xticks([v1, v2], ['$V_1$', '$V_2$'])
     d.ax.set_yticks([u1, y2], ['$U_1$', '$U_2$'])
