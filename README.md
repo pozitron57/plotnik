@@ -78,6 +78,46 @@ with plotnik.Drawing() as d:
 ```
 ![image](https://github.com/pozitron57/plotnik/assets/9392655/673919fa-3dd1-4c92-997e-acf23d9e8c40)
 
+### 3 (Carnot cycle in PV coordinates)
+
+import plotnik
+from plotnik.processes import *
+
+p1 = 10
+v1 = 3
+v2 = 6
+v3 = 10
+
+``` python
+with plotnik.Drawing() as d:
+    d.set_config(
+        fontsize=30,
+        yname='$p$',
+        xname='$V$',
+        aspect=0.7,
+        xlim=[0,11],
+        center=[5.5, 4.5],
+    )
+                 
+    d += (T1:= Iso_t().at(v1, p1).to(v2, 'volume').dot('both').label(1,2) )
+
+    d += (Q1:= Adiabatic().to(v3, 'volume') )
+    p3 = end_p(Q1)
+
+    v4, p4 = common_pv(v1,p1, v3,p3)
+    d += Iso_t().to(v4, 'volume').dot('both').label(3,4)
+
+    d += Adiabatic().to(v1,p1)
+    d += Power(15).at(v2, end_p(T1)).to(v4,p4)
+
+    d.ax.text(4.75, 4.8, '$A_1$', fontsize=24)
+    d.ax.text(5.65, 3.9, '$A_2$', fontsize=24)
+
+    d.show()
+```
+![image](https://github.com/pozitron57/plotnik/assets/9392655/cf1f0a52-f2e7-4e6a-9006-947515c56170)
+
+
 
 ## TODO
 
