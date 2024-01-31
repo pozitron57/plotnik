@@ -20,12 +20,15 @@ from plotnik.processes import *
 
 with plotnik.Drawing() as d:
     d.set_config() # Set options
-    d += Linear().at(1, 1).to(2, 2).arrow().label(1,2).dot('both').tox().toy()
-    d += Power(0.5).to(3, 3) # takes 2,2 as initial point from previous process
+    d += Linear().at(1,1).to(2,2).arrow().label(1,2).dot('both').tox().toy()
+    d += Power(0.5).to(3,3) # takes 2,2 as initial point from previous process and plot y=k^0.5+b to connect (2,2) and (3,3)
     d.show()
-    d.save('filename')
+    d.save('filename.svg', crop=True)
 
 ```
+
+`crop=True` works only with svg files. Requires `Inkscape` installation on your machine.
+It removes paths with names `patch_1` and `patch_2` which in my case contains no paths.
 
 Standard font is "STIX Two Text". Use `d.set_config(font='serif')` to get computer modern roman (need latex to be installed on your machine).
 
@@ -224,7 +227,7 @@ with plotnik.Drawing() as d:
 ```
 ![image](https://github.com/pozitron57/plotnik/assets/9392655/d59e376e-0ef6-4f9e-a02a-cda4878efd36)
 
-### 7. Two Adiabatic() & two Linear()
+### 6. Two Adiabatic() & two Linear()
 ``` python
 import plotnik
 from plotnik.processes import *
@@ -259,7 +262,7 @@ with plotnik.Drawing() as d:
 
 ![image](https://github.com/pozitron57/plotnik/assets/9392655/bcaacd65-30f0-411d-96f7-f1f0989c0fa1)
 
-### 8. Bezier().connect() method
+### 7. Bezier().connect() method
 Reproduce a smooth curve that has to pass through the point (3,60).
 
 ``` python
@@ -290,7 +293,7 @@ with plotnik.Drawing() as d:
 ```
 ![image](https://github.com/pozitron57/plotnik/assets/9392655/0ff9d3d2-fc7b-4fcb-8579-59f208db8560)
 
-### 9. Bezier().get_coordinates()
+### 8. Bezier().get_coordinates()
 when plot a complex curve as two separate processes (hence two calls of `ax.plot()`)
 with large linewidth there may be a bad connection between it. To avoid it, you can use Bezier() to
 calculate coordinates without plotting it. Then append these coordinates to other process
@@ -329,7 +332,7 @@ with plotnik.Drawing() as d:
 ```
 ![image](https://github.com/pozitron57/plotnik/assets/9392655/2ea4db27-f302-46bf-8e78-2f568297990e)
 
-### 10. V=const, adiabatic, isothermal
+### 9. V=const, adiabatic, isothermal
 ``` python
 import plotnik
 from plotnik.processes import *
@@ -362,6 +365,75 @@ with plotnik.Drawing() as d:
 ```
 ![image](https://github.com/pozitron57/plotnik/assets/9392655/04720dfd-a606-4039-86be-5c3a46e6f1b1)
 
+### 10. Arrows and labels positioning
+``` python
+import plotnik
+from plotnik.processes import *
+
+v1 = 2
+v2 = v1
+v3 = 6
+v4 = v3
+
+t1 = 4
+t2 = 2
+t3 = 6
+t4 = 8
+
+
+with plotnik.Drawing() as d:
+    d.set_config(
+        yname='$V$',
+        lw=3.2,
+        xname='$T$',
+        ylim=[0,7],
+        xlim=[0,10],
+        zero_x=0.5,
+        axes_arrow_scale=1.5,
+    )
+
+    d += Linear().at(t1, v1).to(t2, v2).arrow().dot('both').tox()\
+            .label(1,2, start_ofst=[0.5,0.2], end_ofst=[-0.8, 0.2])
+    d += Linear().to(t3, v3).arrow().tozero('start')
+    d += Linear().to(t4, v4).arrow(pos=0.7).tox().dot('both')\
+            .label(3,4, start_dx=-0.5)
+
+    d.ax.set_xticks([2,4,6,8], ['$T_0$','$2T_0$','$3T_0$','$4T_0$'])
+
+    d.show()
+```
+![image](https://github.com/pozitron57/plotnik/assets/9392655/4811a843-8bc3-48b1-947f-01900578dd3d)
+
+### 11. Customize grid()
+``` python
+import plotnik
+from plotnik.processes import *
+
+B = [0, 0.2, 0]
+t = [0, 2,   4]
+
+with plotnik.Drawing() as d:
+    d.set_config(yname='$B,$Тл', xname='$t,$с',
+                 xlim=[0,6.3],
+                 xname_x=5,
+                 yname_y=0.26,
+                 ylim=[0,0.27],
+                 zero_x=0.3,
+                 axes_arrow_scale=1.5,
+                 aspect=20,
+                 )
+
+    d.ax.plot(t,B,'k-', lw=2.5)
+
+    d.ax.set_yticks([0.1,0.2], ['0,1','0,2'])
+    d.ax.set_xticks([1,2,3,4])
+
+    d.grid(step_x=1, step_y=0.05, x_end=4.2, y_end=0.21, lw=2, color='#333333')
+
+    d.show()
+```
+![image](https://github.com/pozitron57/plotnik/assets/9392655/6d77acc6-2835-4116-8c9a-dc019ee9b72a)
+
 
 ## TODO
 
@@ -388,4 +460,16 @@ a prior call to d.show(), ensuring reliable save functionality.
 - make .xtick() use matplotlib ax.set_xticks() method
 
 - Improve the algorithm for automatic determination of positions and sizes for
-labels, ticks, and arrows. 
+labels, ticks, and arrows.
+
+- When need Bezier() only to calculate coordinates, you have to add it to Drawing() like so:
+
+      d += (B1:= Bezier(x=1.8,y=2.8).at(1, 10).to(4, 2.5).lw(0) )
+      x,y = B1.get_coordinates()
+
+  Rewrite the code so one can use
+  
+      B1 = Bezier(x=1.8,y=2.8).at(1, 10).to(4, 2.5)
+      x,y = B1.get_coordinates()
+
+  without adding it an actual figure.
