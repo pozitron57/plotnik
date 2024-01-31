@@ -1,4 +1,4 @@
-import os
+import subprocess
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
 from matplotlib.patches import FancyArrowPatch
@@ -542,11 +542,15 @@ class Drawing:
         plt.show()
 
     def save(self, filename, **kwargs):
-        plt.margins(x=0,y=0, tight=True)
+        plt.margins(x=0, y=0, tight=True)
         self.fig.savefig(filename, bbox_inches='tight')
 
-        # Trim whitespace using Inkscape. Removes groupes with ids patch_1 and patch_2
-        if 'crop' in kwargs:
-            if kwargs['crop']:
-                inkscape_command = f'inkscape --actions="select-by-id:patch_1,patch_2;delete;select-all:all;fit-canvas-to-selection;export-filename:{filename};export-do;" {filename}'
-                os.system(inkscape_command)
+        # Trim whitespace using Inkscape if 'crop' is specified and True
+        if kwargs.get('crop', False):
+            inkscape_command = [
+                'inkscape', 
+                '--actions', 
+                'select-by-id:patch_1,patch_2;delete;select-all:all;fit-canvas-to-selection;export-filename:' + filename + ';export-do;', 
+                filename
+            ]
+            subprocess.run(inkscape_command)
