@@ -359,10 +359,10 @@ with plotnik.Drawing() as d:
     d += (Q1 := Adiabatic().at(v1,p1).to(v2, 'volume').arrow().dot() )
     p2 = end_p(Q1)
 
-    d += (T1 := Iso_t().at(v2,p2).to(v1, 'volume').arrow().dot().label(2, dy=0) )
+    d += (T1 := Iso_t().to(v1, 'volume').arrow().dot().label(2, dy=0) )
     p3 = end_p(T1)
 
-    d += Linear().at(v3,p3).to(v1,p1).arrow().dot().label(3,1)
+    d += Linear().to(v1,p1).arrow().dot().label(3,1)
 
     d.show()
 
