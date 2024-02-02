@@ -132,7 +132,7 @@ class Process:
             center_x = self.config['center_x'] if self.config['center_x'] else xlen/2
             center_y = self.config['center_y'] if self.config['center_y'] else ylen/2
         
-        # Вычисляем смещение в зависимости от положения точки
+        # Calculate the offset depending on the point's position
         k = self.config['fontsize'] / 27
         dx = xlen * 0.05 * k if point and point[0] >= center_x else -xlen * 0.05 * k
         dy = ylen * 0.06 * k if point and point[1] >= center_y else -ylen * 0.07 * k
@@ -141,24 +141,24 @@ class Process:
 
     def label(self, text1=None, text2=None, ofst=None, start_ofst=None, end_ofst=None, 
               end_dx=None, end_dy=None, start_dx=None, start_dy=None, dx=None, dy=None):
-        # Применение dx и dy, если они заданы
+        # Set dx and dy if they are provided
         if dx is not None:
             start_dx = end_dx = dx
         if dy is not None:
             start_dy = end_dy = dy
 
-        # Установка start_ofst и end_ofst с учетом индивидуальных смещений
+        # Set start_ofst and end_ofst considering individual offsets
         if start_ofst is None and (start_dx is not None or start_dy is not None):
             start_ofst = (start_dx, start_dy)
 
         if end_ofst is None and (end_dx is not None or end_dy is not None):
             end_ofst = (end_dx, end_dy)
 
-        # Установка ofst, если он задан
+        # Set ofst if it is provided
         if ofst is not None:
             start_ofst = end_ofst = ofst
 
-        # Установка меток для State или для начальной и конечной точек
+        # Setting labels for State or for the start and end points
         if isinstance(self, State):
             self.start_label = {'text': text1, 'ofst': start_ofst}
         else:
@@ -177,7 +177,7 @@ class Process:
                 dx, dy = self.calculate_ofst(point)
             else:
                 dx, dy = label_data['ofst']
-                # Если dx или dy не заданы, используем значения по умолчанию
+                # If dx or dy are not provided, use default values
                 if dx is None or dy is None:
                     default_dx, default_dy = self.calculate_ofst(point)
                     dx = dx if dx is not None else default_dx
@@ -194,17 +194,17 @@ class Process:
             add_label(self.end, self.end_label, ax, config)
 
 
-    # Для работы Bezier().connect()
+    # For Bezier().connect() to work
     def tangent_at_end(self):
         if hasattr(self, 'x_values') and hasattr(self, 'y_values') and len(self.x_values) > 1:
-            # Используем последние две точки для определения касательной
+            # Use the last two points to determine the tangent
             direction = (self.x_values[-1] - self.x_values[-2], self.y_values[-1] - self.y_values[-2])
             return direction
         return None
 
     def tangent_at_start(self):
         if hasattr(self, 'x_values') and hasattr(self, 'y_values') and len(self.x_values) > 1:
-            # Используем первые две точки для определения касательной
+            # Use the first two points to determine the tangent
             direction = (self.x_values[1] - self.x_values[0], self.y_values[1] - self.y_values[0])
             return direction
         return None
@@ -223,17 +223,17 @@ class Process:
         return self
 
     def xtick(self, *labels, which=None):
-        # Функция для преобразования числа в строку с заменой точки на запятую
+        # Function to convert a number to a string with a dot replaced by a comma
         def format_label(value):
             return f'${str(value).replace(".", "{,}")}$'
-        # Если метки не заданы, используем числовые значения координат
+        # If labels are not provided, use the numerical values of the coordinates
         if not labels:
             if isinstance(self, State) or which == 'start':
                 self.start_xtick_label = format_label(self.start[0])
             elif which == 'end' and self.end is not None:
                 self.end_xtick_label = format_label(self.end[0])
             elif self.end is not None:
-                # Добавляем метки для обеих точек
+                # Add labels for both points
                 self.start_xtick_label = format_label(self.start[0])
                 self.end_xtick_label = format_label(self.end[0])
         else:
@@ -248,17 +248,17 @@ class Process:
         return self
 
     def ytick(self, *labels, which=None):
-        # Функция для преобразования числа в строку с заменой точки на запятую
+        # Function to convert a number to a string, replacing a dot with a comma
         def format_label(value):
             return f'${str(value).replace(".", "{,}")}$'
-        # Если метки не заданы, используем числовые значения координат
+        # If labels are not provided, use the numerical values of the coordinates
         if not labels:
             if isinstance(self, State) or which == 'start':
                 self.start_ytick_label = format_label(self.start[1])
             elif which == 'end' and self.end is not None:
                 self.end_ytick_label = format_label(self.end[1])
             elif self.end is not None:
-                # Добавляем метки для обеих точек
+                # Adding labels for both points
                 self.start_ytick_label = format_label(self.start[1])
                 self.end_ytick_label = format_label(self.end[1])
         else:
@@ -279,15 +279,15 @@ class Process:
             if self.arrow_params:
                 self._add_arrow(ax, self.x_values, self.y_values)
             self._add_dots(ax)
-        # Добавляем подписи около точек
+        # Add labels
         self._add_labels(ax, config)
 
 class State(Process):
     def __init__(self, drawing=None):
-        super().__init__()  # Вызываем конструктор базового класса
-        self.draw_dot = False  # Флаг для управления отрисовкой точки
+        super().__init__()  # Call the constructor of the parent class
+        self.draw_dot = False  # Flag to control the drawing of the point
         self.type = 'state'
-        self.dot_params = {'size': 6, 'color': 'black'}  # Значения по умолчанию для точки
+        self.dot_params = {'size': 6, 'color': 'black'}  # Default params for the point
         self.label_text = ''
         self.label_ofst = None
         if drawing:
@@ -298,7 +298,7 @@ class State(Process):
             self.config = {}
 
     def at(self, x, y):
-        self.start = (x, y)  # У State только начальная точка (как и конечная)
+        self.start = (x, y)  # For State, there's only a start point (same as the end point)
         return self
 
     def dot(self, size=6, color='k'):
@@ -312,11 +312,11 @@ class State(Process):
 
         x, y = self.start
 
-        # Рисование точки
+        # Drawing the point
         if self.draw_dot:
             ax.plot(x, y, 'o', markersize=self.dot_params['size'], color=self.dot_params['color'])
 
-        ## Если задана подпись, рисуем ее
+        ## If a label is provided, draw it
         self._add_labels(ax, config)
             
         return self
@@ -347,11 +347,11 @@ class Iso_t(Process):
 
         V1, p1 = self.start
 
-        # Если конечная точка не определена, используем параметры из метода to()
+        # If the end point is not defined, use parameters from the to() method
         if self.end is None:
             raise ValueError("End point must be set for 'Iso_t' process.")
 
-        # Убедимся, что end_y_or_type было задано
+        # Ensure end_y_or_type is specified
         if isinstance(self.end, tuple) and isinstance(self.end[1], str):
             end_x, end_y_or_type = self.end
             if end_y_or_type == 'volume':
@@ -366,7 +366,7 @@ class Iso_t(Process):
 
         self.x_values = np.linspace(V1, V2, 100)
         self.y_values = p1 * V1 / self.x_values
-        #self.config = config  # Сохранение config в объекте
+        #self.config = config  # Saving config in the object
         super().plot(ax, config)
 
     def to(self, end_x, end_y_or_type=None):
@@ -378,20 +378,20 @@ class Power(Process):
         super().__init__()
         self.type = 'power'
         self.power = power
-        #self.drawing = drawing  # Сохраняем контекст рисования
+        #self.drawing = drawing  # Save the drawing context
 
     def plot(self, ax, config):
-        # Если начальная точка не задана, используем последнюю точку из контекста рисования
+        # If the start point is not set, use the last point from the drawing context
         if self.start is None and self.drawing and self.drawing.last_point:
             self.start = self.drawing.last_point
 
-        # Если конечная точка не задана, используем параметры из метода to()
+        # If the end point is not defined, use parameters from the to() method
         if self.end is None:
             raise ValueError("End point must be set for 'Power' process.")
 
         x1, y1 = self.start
 
-        # Убедимся, что end_y_or_type было задано
+        # Ensure that end_y_or_type is set
         if isinstance(self.end, tuple) and isinstance(self.end[1], str):
             end_x, end_y_or_type = self.end
             if end_y_or_type == 'x':
@@ -405,7 +405,7 @@ class Power(Process):
         x2, y2 = self.end
 
         # y = kx^n + b
-        # Решение системы уравнений для нахождения k и b
+        # Solving the system of equations to find k and b
         k = (y2 - y1) / (x2**self.power - x1**self.power)
         b = y1 - k * x1**self.power
         self.x_values = np.linspace(x1, x2, 100)
@@ -432,11 +432,11 @@ class Adiabatic(Process):
 
         V1, p1 = self.start
 
-        # Если конечная точка не определена, используем параметры из метода to()
+        # If the end point is not defined, use parameters from the to() method
         if self.end is None:
             raise ValueError("End point must be set for 'Adiabatic' process.")
 
-        # Убедимся, что end_y_or_type было задано
+        # Ensure that end_y_or_type is set
         if isinstance(self.end, tuple) and isinstance(self.end[1], str):
             end_x, end_y_or_type = self.end
             if end_y_or_type == 'volume':
@@ -467,13 +467,13 @@ class Bezier(Process):
         self.y1 = y1
         self.x2 = x2
         self.y2 = y2
-        self.coordinates = []  # Список для хранения координат кривой
+        self.coordinates = []  # List to store the coordinates
 
     def connect(self, process1, process2):
-        # Находим точку пересечения процессов
+        # Find the intersection point
         intersection_point = self._find_intersection(process1, process2)
 
-        # Устанавливаем начальную и конечную точки, а также контрольную точку
+        # Set the start and end points, as well as the control point
         self.start = process1.end if process1.end else process1.start
         self.end = process2.start if process2.start else process2.end
         self.x = intersection_point[0]
@@ -486,44 +486,44 @@ class Bezier(Process):
         tangent2 = process2.tangent_at_start()
 
         if tangent1 is None or tangent2 is None:
-            return None  # Невозможно вычислить точку пересечения
+            return None  # Impossible to calculate the intersection point
 
         x1, y1 = process1.end
         x2, y2 = x1 + tangent1[0], y1 + tangent1[1]
         x3, y3 = process2.start
         x4, y4 = x3 + tangent2[0], y3 + tangent2[1]
 
-        # Вычисление угловых коэффициентов (наклонов)
+        # Calculating the slope coefficients
         k1 = (y2 - y1) / (x2 - x1)
         k2 = (y4 - y3) / (x4 - x3)
 
-        # Вычисление точек пересечения с осью Y
+        # Calculating the intersection points with the Y-axis
         b1 = y1 - k1 * x1
         b2 = y3 - k2 * x3
 
-        # Проверка на параллельность
+        # Check for parallelism
         if k1 == k2:
-            # Процессы параллельны, нужно выбрать другой способ соединения
+            # Processes are parallel, need to choose another way of connection
             return None
 
-        # Находим точку пересечения
+        # Find the intersection point of the processes
         intersection_x = (b2 - b1) / (k1 - k2)
         intersection_y = k1 * intersection_x + b1
 
         return intersection_x, intersection_y
 
     def plot(self, ax, config):
-        if self.start and self.end: # зачем эта проверка? Что происходит else?
+        if self.start and self.end: # Why this check? What happens else?
             x1, y1 = self.start
             x2, y2 = self.end
             t = np.linspace(0, 1, 100)
 
             if self.x1 is not None and self.x2 is not None:
-                # Кривая Безье третьего порядка
+                # Third-order Bezier curve
                 self.x_values = (1-t)**3 * x1 + 3 * (1-t)**2 * t * self.x1 + 3 * (1-t) * t**2 * self.x2 + t**3 * x2
                 self.y_values = (1-t)**3 * y1 + 3 * (1-t)**2 * t * self.y1 + 3 * (1-t) * t**2 * self.y2 + t**3 * y2
             else:
-                # Кривая Безье второго порядка
+                # Second-order Bezier curve
                 self.x_values = (1-t)**2 * x1 + 2 * (1-t) * t * self.x + t**2 * x2
                 self.y_values = (1-t)**2 * y1 + 2 * (1-t) * t * self.y + t**2 * y2
 
@@ -535,16 +535,16 @@ class Bezier(Process):
         if 0 <= n < len(self.coordinates):
             return self.coordinates[n][0], self.coordinates[n][1]
         else:
-            raise IndexError("Индекс за пределами диапазона точек кривой Безье.")
+            raise IndexError("Index out of the range of Bezier curve points.")
 
 
     def get_coordinates(self):
         if self.coordinates:
-            # Разбиваем список кортежей на два списка для координат x и y
+            # Split the list of tuples into two lists for x and y coordinates
             x_values, y_values = zip(*self.coordinates)
             return x_values, y_values
         else:
-            return [], []  # Возвращаем пустые списки, если координат нет
+            return [], []  # Return empty lists if there are no coordinates
 
 
     def to(self, end_x, end_y=None):
@@ -606,19 +606,19 @@ def common_QT(process1, process2, gamma=5/3):
     return x,y 
 
 def interpolate_curve(x_values, y_values, num_points=100):
-    # Вычисляем длину кривой
+    # Calculate the curve length
     total_length = np.sum(np.sqrt(np.diff(x_values)**2 + np.diff(y_values)**2))
     length_along_curve = np.insert(np.cumsum(np.sqrt(np.diff(x_values)**2 + np.diff(y_values)**2)), 0, 0)
 
-    # Ограничиваем максимальное расстояние максимальным значением длины кривой
+    # Limit the maximum distance by the maximum value of the curve length
     max_length = length_along_curve[-1]
     distance = np.linspace(0, max_length, num_points)
 
-    # Интерполируем x и y как функции от длины
+    # Interpolate x and y as functions of length
     f_x = interp1d(length_along_curve, x_values, kind='linear', bounds_error=False, fill_value="extrapolate")
     f_y = interp1d(length_along_curve, y_values, kind='linear', bounds_error=False, fill_value="extrapolate")
 
-    # Вычисляем новые значения x и y
+    # Calculate new x and y values
     new_x_values = f_x(distance)
     new_y_values = f_y(distance)
 
