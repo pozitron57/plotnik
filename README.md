@@ -64,37 +64,43 @@ for example, `d.ax.plot(x, y)`.
 
 
 ## Examples
-### 1. Power()
+### 1. V=const, adiabatic, isothermal
+This example illustrates well the purpose behind the creation of the library.
+It is necessary to draw a cycle in pV-coordinates, consisting of an isochore,
+adiabat, and isotherm. The goal was to free the user from the need to perform
+calculations and to provide a simple interface for constructing such graphs.
+
 ``` python
 import plotnik
 from plotnik.processes import *
 
-v1 = 8
-u1 = 6
-v2 = 3.5
+v1 = 3
+v2 = 9
+v3 = v1
+
+p1 = 9
+
 
 with plotnik.Drawing() as d:
     d.set_config(
-        fontsize=31,
-        yname='$U$', 
         xname='$V$',
-        ylim=[0,7.4],
-        axes_arrow_length=1.1,
-        center=[10,0],
+        yname='$p$',
+        zero_x=0.5,
+        axes_arrow_width=0.23,
     )
 
-    d += (P1:= Power().at(v1, u1).to(v2, 'x').arrow().label(1,2).dot('both').tox().toy() )
-    y2 = end_y(P1)
+    d += (Q1 := Adiabatic().at(v1,p1).to(v2, 'volume').arrow().dot() )
+    p2 = end_p(Q1)
 
-    d += Power().to(0, 0).ls('--')
+    d += (T1 := Iso_t().to(v1, 'volume').arrow().dot().label(2, dy=0) )
+    p3 = end_p(T1)
 
-    d.ax.set_xticks([v1, v2], ['$V_1$', '$V_2$'])
-    d.ax.set_yticks([u1, y2], ['$U_1$', '$U_2$'])
+    d += Linear().to(v1,p1).arrow().dot().label(3,1)
 
     d.show()
-```
 
-![image](https://github.com/pozitron57/plotnik/assets/9392655/6f3aa682-4f9e-4b08-b426-9cba5448a094)
+```
+![image](https://github.com/pozitron57/plotnik/assets/9392655/04720dfd-a606-4039-86be-5c3a46e6f1b1)
 
 ### 2. Linear() and grid()
 ``` python
@@ -336,38 +342,37 @@ with plotnik.Drawing() as d:
 ```
 ![image](https://github.com/pozitron57/plotnik/assets/9392655/2ea4db27-f302-46bf-8e78-2f568297990e)
 
-### 9. V=const, adiabatic, isothermal
+### 9. Power()
 ``` python
 import plotnik
 from plotnik.processes import *
 
-v1 = 3
-v2 = 9
-v3 = v1
-
-p1 = 9
-
+v1 = 8
+u1 = 6
+v2 = 3.5
 
 with plotnik.Drawing() as d:
     d.set_config(
+        fontsize=31,
+        yname='$U$', 
         xname='$V$',
-        yname='$p$',
-        zero_x=0.5,
-        axes_arrow_width=0.23,
+        ylim=[0,7.4],
+        axes_arrow_length=1.1,
+        center=[10,0],
     )
 
-    d += (Q1 := Adiabatic().at(v1,p1).to(v2, 'volume').arrow().dot() )
-    p2 = end_p(Q1)
+    d += (P1:= Power().at(v1, u1).to(v2, 'x').arrow().label(1,2).dot('both').tox().toy() )
+    y2 = end_y(P1)
 
-    d += (T1 := Iso_t().to(v1, 'volume').arrow().dot().label(2, dy=0) )
-    p3 = end_p(T1)
+    d += Power().to(0, 0).ls('--')
 
-    d += Linear().to(v1,p1).arrow().dot().label(3,1)
+    d.ax.set_xticks([v1, v2], ['$V_1$', '$V_2$'])
+    d.ax.set_yticks([u1, y2], ['$U_1$', '$U_2$'])
 
     d.show()
-
 ```
-![image](https://github.com/pozitron57/plotnik/assets/9392655/04720dfd-a606-4039-86be-5c3a46e6f1b1)
+
+![image](https://github.com/pozitron57/plotnik/assets/9392655/6f3aa682-4f9e-4b08-b426-9cba5448a094)
 
 ### 10. Arrows and labels positioning
 ``` python
