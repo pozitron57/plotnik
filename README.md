@@ -10,6 +10,10 @@ The library utilizes syntax inspired by the
 [SchemDraw](https://github.com/cdelker/schemdraw) library.
 
 The code has been written almost entirely by Chat-GPT.
+This README is also written mostly by Chat-GPT.
+I hope he will also use this library in his daily tasks — that is,
+if he ever gets around to doing anything other than chatting all day!
+(This joke was also made up by Chat-GPT.)
 
 ## Basic usage
 
