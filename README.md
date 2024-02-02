@@ -1,6 +1,6 @@
 `plotnik` is a Python library designed for creating simple graphs using matplotlib in Cartesian coordinates,
 mirroring the style of 'school' graphs traditionally used in Russian physics and mathematics education.
-It was developed for convenient drawing thermodynamic cycles, including nonlinear processes.
+It was developed for convenient drawing of thermodynamic cycles, including nonlinear processes.
 
 The library is currently usable. The code is very poorly designed.
 Full documentation is not available, but you can refer to the examples
