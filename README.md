@@ -27,7 +27,8 @@ with plotnik.Drawing() as d:
 ```
 
 `crop=True` is only compatible with SVG files and requires the installation of `Inkscape` on your machine.
-This feature removes paths named `patch_1` and `patch_2`, which, in my case, do not contain any paths.
+This feature removes paths named `patch_1` and `patch_2`, which, in my case, do not contain any paths
+but add a whitespace margin.
 
 The default font is 'STIX Two Text'. To switch to Computer Modern Roman, use `d.set_config(font='serif')`,
 noting that this requires LaTeX to be installed on your machine.
