@@ -3,19 +3,20 @@ import numpy as np
 from scipy.interpolate import interp1d
 
 
+# Process() is a parent class for
+# Linear(), Power(), Iso_t(), Adiabatic(), Bezier() subclasses.
 class Process:
-    def __init__(self): # Общие атрибуты для всех процессов
+    def __init__(self):
         self.start = None
         self.end = None
         self.color = 'k'
-        self.arrow_params = {}  # Инициализация пустым словарем
+        self.arrow_params = {}
         self.dots_params = {'start': None, 'end': None}
         self.linestyle = '-'
         self.linewidth = 2.5
-        self.extra_lines = []  # Для хранения инструкций по рисованию дополнительных линий
+        self.extra_lines = [] # to store tox(), toy(), tozero() information
         self.xtick_labels = []
         self.ytick_labels = []
-        #self.drawing = None  # Инициализируем drawing как None
 
     def at(self, start_x, start_y):
         self.start = (start_x, start_y)
@@ -42,7 +43,6 @@ class Process:
             self.arrow_params['size'] = size
         return self
 
-
     def _add_arrow(self, ax, x_values, y_values):
         x_values, y_values = interpolate_curve(x_values, y_values)
         if self.arrow_params:
@@ -52,7 +52,7 @@ class Process:
             if arrow_size is None:
                 arrow_size = self.config.get('arrow_size', 27)
 
-            # Вычисляем угол наклона стрелки
+            # Calculate arrow rotation
             if index < len(x_values) - 1:
                 dx = x_values[index + 1] - x
                 dy = y_values[index + 1] - y
@@ -60,11 +60,11 @@ class Process:
                 dx = x - x_values[index - 1]
                 dy = y - y_values[index - 1]
 
-            # Разворачиваем стрелку, если требуется
+            # Reverse the arrow
             if self.arrow_params['reverse']:
                 dx, dy = -dx, -dy
 
-            # Определяем стиль стрелки
+            # Arrow style
             if self.arrow_params['filled']:
                 style = ArrowStyle('-|>', head_length=self.arrow_params['head_length'],
                                    head_width=self.arrow_params['head_width'])
@@ -72,7 +72,7 @@ class Process:
                 style = ArrowStyle('->', head_length=self.arrow_params['head_length'],
                                    head_width=self.arrow_params['head_width'])
 
-            # Создаем и добавляем стрелку на график
+            # Draw arrow
             arrow = FancyArrowPatch(
                 (x, y), (x + dx, y + dy),
                 arrowstyle=style,
@@ -96,8 +96,9 @@ class Process:
         return self
     
     def dot(self, pos='end', **kwargs):
-        default_params = {'size': 8, 'color': 'black'}  # Значения по умолчанию
-        dot_params = {**default_params, **kwargs}  # Объединение значений по умолчанию с пользовательскими параметрами
+        default_params = {'size': 8, 'color': 'black'}
+        # Add user specified parameters to default parameters
+        dot_params = {**default_params, **kwargs}
 
         if pos in ['start', 'end', 'both']:
             if pos == 'both':
@@ -110,18 +111,18 @@ class Process:
         for position in ['start', 'end']:
             if self.dots_params[position]:
                 point = self.start if position == 'start' else self.end
-                # Убедимся, что точка содержит обе координаты
+                # Check that point has 2 coordinates
                 if point and None not in point:
                     ax.plot(point[0], point[1], marker='o', 
                             markersize=self.dots_params[position].get('size', 6),
                             color=self.dots_params[position].get('color', 'k'))
 
     def calculate_ofst(self, point=None):
-        # Убедимся, что конфигурация доступна
+        # Check that config is accessible
         if not hasattr(self, 'config') or not self.config:
             raise ValueError("Config not set for this process.")
 
-        # Используем конфигурацию напрямую из self.config
+        # 
         xlen = self.config['xlim'][1] - self.config['xlim'][0]
         ylen = self.config['ylim'][1] - self.config['ylim'][0]
 
