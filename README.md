@@ -2,8 +2,8 @@
 mirroring the style of 'school' graphs traditionally used in Russian physics and mathematics education.
 It was developed for convenient drawing thermodynamic cycles, including nonlinear processes.
 
-The library is currently usable but still in an early stage of development.
-Full documentation is not yet available, but you can refer to the examples
+The library is currently usable. The code is very poorly designed.
+Full documentation is not available, but you can refer to the examples
 provided below to understand its functionality.
 
 The library utilizes syntax inspired by the
