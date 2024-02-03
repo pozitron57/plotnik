@@ -194,7 +194,7 @@ with plotnik.Drawing() as d:
     # Use an asterisk to unpack this tuple into x and y.
     # The allowed index range is from 0 to 100. 
     d += State().at(*B.get_point( 4)).dot().label('A')
-    d += State().at(*B.get_point(18)).dot().label('B', start_dx=0)
+    d += State().at(*B.get_point(18)).dot().label('B', dx=0)
     d += State().at(*B.get_point(48)).dot().label('C')
     d += State().at(*B.get_point(91)).dot().label('D')
 
