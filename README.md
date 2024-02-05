@@ -16,19 +16,23 @@ if he ever gets around to doing anything other than chatting all day!
 (This joke was also made up by Chat-GPT.)
 
 ## Basic usage
-
+The code
 ``` python
 import plotnik
 from plotnik.processes import *
 
 with plotnik.Drawing() as d:
-    d.set_config() # Set options
-    d += Linear().at(1,1).to(2,2).arrow().label(1,2).dot('both').tox().toy()
-    d += Power(0.5).to(3,3) # takes 2,2 as initial point from previous process and plot y=k^0.5+b to connect (2,2) and (3,3)
+    d.set_config(yname='$y$', xname='$x$') # Set options
+    d += Linear().at(2,2).to(4,8).arrow().label(1,2).dot('both').tox().toy()
+    d += Power(5).to(8,5).arrow().dot() # takes (3,8) as initial point from previous process and plot y=k^0.5+b to connect (2,2) and (3,3)
+    d += Bezier(x=5,y=-1).to(2,2).arrow().label(3)
     d.show()
     d.save('filename.svg', crop=True)
-
 ```
+
+will produce a figure
+
+<img width="469" alt="image" src="https://github.com/pozitron57/plotnik/assets/9392655/bc9468bc-f9de-4945-9abb-ef91c6ef6e81">
 
 `crop=True` is only compatible with SVG files and requires the installation of `Inkscape` on your machine.
 This feature removes paths named `patch_1` and `patch_2`, which, in my case, do not contain any paths
