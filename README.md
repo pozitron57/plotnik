@@ -24,7 +24,7 @@ from plotnik.processes import *
 with plotnik.Drawing() as d:
     d.set_config(yname='$y$', xname='$x$') # Set options
     d += Linear().at(2,2).to(4,8).arrow().label(1,2).dot('both').tox().toy()
-    d += Power(5).to(8,5).arrow().dot() # takes (3,8) as initial point from previous process and plot y=k^0.5+b to connect (2,2) and (3,3)
+    d += Power(5).to(8,5).arrow().dot() # takes (4,8) as initial point from previous process and plot y=k^0.5+b to connect (2,2) and (3,3)
     d += Bezier(x=5,y=-1).to(2,2).arrow().label(3)
     d.show()
     d.save('filename.svg', crop=True)
