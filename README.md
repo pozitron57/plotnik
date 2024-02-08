@@ -1,6 +1,7 @@
 `plotnik` is a Python library designed for creating simple graphs using matplotlib in Cartesian coordinates,
 mirroring the style of 'school' graphs traditionally used in Russian physics and mathematics education.
-It was developed for convenient drawing of thermodynamic cycles, including nonlinear processes.
+It was developed for convenient drawing of thermodynamic cycles, including nonlinear processes,
+without need to perform calculations.
 
 The library is currently usable. The code is very poorly designed.
 Full documentation is not available, but you can refer to the examples
@@ -10,10 +11,6 @@ The library utilizes syntax inspired by the
 [SchemDraw](https://github.com/cdelker/schemdraw) library.
 
 The code has been written almost entirely by Chat-GPT.
-This README is also written mostly by Chat-GPT.
-I hope he will also use this library in his daily tasks — that is,
-if he ever gets around to doing anything other than chatting all day!
-(This joke was also made up by Chat-GPT.)
 
 ## Basic usage
 
