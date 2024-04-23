@@ -1,6 +1,7 @@
 from matplotlib.patches import FancyArrowPatch, ArrowStyle
 import numpy as np
 from scipy.interpolate import interp1d
+from .global_drawing import GlobalDrawing
 
 
 # Process() is a parent class for
@@ -13,6 +14,7 @@ class Process:
         self.arrow_params = {}
         self.dots_params = {'start': None, 'end': None}
         self.linestyle = '-'
+        self.zorder = 1
         self.linewidth = 2.5
         self.extra_lines = [] # to store tox(), toy(), tozero() information
         self.xtick_labels = []
@@ -24,6 +26,7 @@ class Process:
 
     def to(self, end_x, end_y=None):
         self.end = (end_x, end_y)
+        GlobalDrawing.get_instance().add_process(self)
         return self
 
     def arrow(self, size=None, pos=0.54, color='black', reverse=False,
@@ -41,6 +44,7 @@ class Process:
         }
         if size is not None:
             self.arrow_params['size'] = size
+        GlobalDrawing.get_instance().add_process(self)
         return self
 
     def _add_arrow(self, ax, x_values, y_values):
@@ -82,17 +86,24 @@ class Process:
             )
             ax.add_patch(arrow)
 
-
     def col(self, color):
         self.color = color
+        GlobalDrawing.get_instance().add_process(self)
         return self
 
     def ls(self, linestyle):
         self.linestyle = linestyle
+        GlobalDrawing.get_instance().add_process(self)
         return self
 
     def lw(self, linewidth):
         self.linewidth = linewidth
+        GlobalDrawing.get_instance().add_process(self)
+        return self
+
+    def zord(self, zorder):
+        self.zorder = zorder
+        GlobalDrawing.get_instance().add_process(self)
         return self
     
     def dot(self, pos='end', **kwargs):
@@ -105,6 +116,7 @@ class Process:
                 self.dots_params['start'] = self.dots_params['end'] = dot_params
             else:
                 self.dots_params[pos] = dot_params
+        GlobalDrawing.get_instance().add_process(self)
         return self
 
     def _add_dots(self, ax):
@@ -122,7 +134,6 @@ class Process:
         if not hasattr(self, 'config') or not self.config:
             raise ValueError("Config not set for this process.")
 
-        # 
         xlen = self.config['xlim'][1] - self.config['xlim'][0]
         ylen = self.config['ylim'][1] - self.config['ylim'][0]
 
@@ -167,6 +178,7 @@ class Process:
             else:
                 self.start_label = {'text': text1, 'ofst': start_ofst}
                 self.end_label = {'text': text2, 'ofst': end_ofst}
+        GlobalDrawing.get_instance().add_process(self)
         return self
 
 
@@ -212,10 +224,12 @@ class Process:
 
     def tox(self, type='both', color='k', ls='--', lw=1.6):
         self.extra_lines.append(('x', type, color, ls, lw))
+        GlobalDrawing.get_instance().add_process(self)
         return self
 
     def toy(self, type='both', color='k', ls='--', lw=1.6):
         self.extra_lines.append(('y', type, color, ls, lw))
+        GlobalDrawing.get_instance().add_process(self)
         return self
 
     def tozero(self, type='both', color='k', ls='--', lw=1.6):
@@ -275,7 +289,8 @@ class Process:
     def plot(self, ax, config):
         if hasattr(self, 'x_values') and hasattr(self, 'y_values'):
             ax.plot(self.x_values, self.y_values, color=self.color,
-                    linestyle=self.linestyle, linewidth=self.linewidth)
+                    linestyle=self.linestyle, linewidth=self.linewidth,
+                    zorder=self.zorder)
             if self.arrow_params:
                 self._add_arrow(ax, self.x_values, self.y_values)
             self._add_dots(ax)
@@ -415,6 +430,7 @@ class Power(Process):
 
     def to(self, end_x, end_y_or_type=None):
         self.end = (end_x, end_y_or_type)
+        GlobalDrawing.get_instance().add_process(self)
         return self
 
 class Adiabatic(Process):
@@ -455,6 +471,7 @@ class Adiabatic(Process):
 
     def to(self, end_x, end_y_or_type=None):
         self.end = (end_x, end_y_or_type)
+        GlobalDrawing.get_instance().add_process(self)
         return self
 
 class Bezier(Process):
@@ -549,8 +566,61 @@ class Bezier(Process):
 
     def to(self, end_x, end_y=None):
         self.end = (end_x, end_y)
+        GlobalDrawing.get_instance().add_process(self)
         return self
 
+class Parabola(Process):
+    def __init__(self):
+        super().__init__()
+        self.type = 'parabola'
+        self.vertex_x = None
+        self.vertex_y = None
+        self.a = None
+        self.b = None
+        self.c = None
+
+    def vertex(self, x0, y0):
+        self.vertex_x = x0
+        self.vertex_y = y0
+        return self
+
+    def calculate_coefficients(self):
+        # Убедитесь, что все точки заданы
+        if self.vertex_x is None or self.vertex_y is None or self.start is None or self.end is None:
+            raise ValueError("Vertex, start, and end points must be set for 'Parabola' process.")
+
+        x0, y0 = self.vertex_x, self.vertex_y
+        x1, y1 = self.start
+        x2, y2 = self.end
+
+        # Система уравнений для a, b, c, используя точку вершины и две другие точки
+        A = np.array([[x1**2, x1, 1], [x2**2, x2, 1], [x0**2, x0, 1]])
+        B = np.array([y1, y2, y0])
+        self.a, self.b, self.c = np.linalg.solve(A, B)
+
+
+    def plot(self, ax, config):
+        self.calculate_coefficients()
+
+        ## Ensure end_y_or_type is specified
+        #if isinstance(self.end, tuple) and isinstance(self.end[1], str):
+            #end_x, end_y_or_type = self.end
+            #if end_y_or_type == 'x':
+                #x2 = end_x
+                #y2 = self.a * self.x2**2 + self.b * self.x2 + self.c
+            #elif end_y_or_type == 'y':
+                #y2 = end_y
+                #x2 = (-self.b + np.sqrt(self.b**2-4*self.a*self.c)) / (2*self.a)
+                ## x2=(-self.b - np.sqrt(self.b**2-4*self.a*self.c)) / (2*self.a)
+            #self.end = (x2, y2)
+
+        print(self.a, self.b, self.c)
+        if self.start and self.end:
+            x1, y1 = self.start
+            x2, y2 = self.end
+            self.x_values = np.linspace(x1, x2, 100)
+            self.y_values = self.a * self.x_values**2 + self.b * self.x_values + self.c
+            super().plot(ax, config)
 
 
 def end_x(process):
@@ -585,12 +655,13 @@ def end_p(process):
         return (p1 * V1 ** process.gamma) / V2 ** process.gamma
     return None
 
+# Find intersection adiabatic and iso_t using (v1,p1) and (v3,p3)
 def common_pv(v1, p1, v3, p3, gamma=5/3):
     v2 = v1**(gamma/(gamma-1)) * (p1 / (p3 * v3))**(1/(gamma-1))
     p2 = p3*v3/v2
     return v2,p2
 
-# Find intersection adiabatic and iso_t
+# Find intersection adiabatic and iso_t using process names
 def common_QT(process1, process2, gamma=5/3):
     if process1.type == 'state':
         x1, y1 = process1.start
@@ -605,6 +676,7 @@ def common_QT(process1, process2, gamma=5/3):
     y = y2*x2/x
     return x,y 
 
+# Distribute points evenly along the curve for better arrow placement
 def interpolate_curve(x_values, y_values, num_points=100):
     # Calculate the curve length
     total_length = np.sum(np.sqrt(np.diff(x_values)**2 + np.diff(y_values)**2))

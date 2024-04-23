@@ -47,6 +47,11 @@ class Drawing:
         self.add_process(process)
         return self
 
+    ## For global drawing
+    #def initialize_axes(self):
+        ##self.fig, self.ax = plt.subplots()
+        #pass
+
     def update_rcParams(self):
         tick_length = self.config['tick_length'] if self.config['tick_length'] is not None else 6.5
         tick_width = self.config['tick_width'] if self.config['tick_width'] is not None else 2
@@ -104,6 +109,8 @@ class Drawing:
             self.ax.set_ylim(kwargs['ylim'])
 
     def add_process(self, process):
+        if self.ax is None:
+            raise Exception("Axes not initialized.") 
         process.config = self.config  # Set config for the process
         if process.start is None and self.last_point is not None:
             # Use last point from the previous process
@@ -397,7 +404,7 @@ class Drawing:
         arrow_x = FancyArrowPatch((xlim[0], 0), (xlim[1], 0),
                                   clip_on=False,
                                   arrowstyle=arrowstyle_x,
-                                  mutation_scale= 200 / xlen * axes_arrow_scale,
+                                  mutation_scale = 200 / xlen * axes_arrow_scale,
                                   mutation_aspect=aspect,
                                   shrinkA=0,
                                   shrinkB=0,
