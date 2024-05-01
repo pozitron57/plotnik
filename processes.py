@@ -19,7 +19,6 @@ class Process:
         self.extra_lines = [] # to store tox(), toy(), tozero() information
         self.xtick_labels = []
         self.ytick_labels = []
-        
         self._add_to_global_drawing()
 
     def _add_to_global_drawing(self):
@@ -353,11 +352,11 @@ class Iso_t(Process):
         self.type = 'iso_t'
 
     def plot(self, ax, config):
-        if self.start is None:
-            if self.drawing and self.drawing.last_point:
-                self.start = self.drawing.last_point
-            else:
-                raise ValueError("Start point must be set for 'Iso_t' process.")
+        #if self.start is None:
+            #if self.drawing and self.drawing.last_point:
+                #self.start = self.drawing.last_point
+            #else:
+                #raise ValueError("Start point must be set for 'Iso_t' process.")
 
         V1, p1 = self.start
 
@@ -365,26 +364,25 @@ class Iso_t(Process):
         if self.end is None:
             raise ValueError("End point must be set for 'Iso_t' process.")
 
-        # Ensure end_y_or_type is specified
-        if isinstance(self.end, tuple) and isinstance(self.end[1], str):
-            end_x, end_y_or_type = self.end
-            if end_y_or_type == 'volume':
-                V2 = end_x
-                p2 = p1 * V1 / V2
-            elif end_y_or_type == 'pressure':
-                p2 = end_x
-                V2 = p1 * V1 / p2
-            self.end = (V2, p2)
-
         V2, p2 = self.end
 
         self.x_values = np.linspace(V1, V2, 100)
         self.y_values = p1 * V1 / self.x_values
-        #self.config = config  # Saving config in the object
         super().plot(ax, config)
 
-    def to(self, end_x, end_y_or_type=None):
-        self.end = (end_x, end_y_or_type)
+    def to(self, end, end_type="pressure"):
+        V1, p1 = self.start
+
+        if end_type == "pressure":
+            p2 = end
+            V2 = p1 * V1 / p2
+        elif end_type == "volume":
+            V2 = end
+            p2 = p1 * V1 / V2
+        else:
+            raise ValueError(f"Unknown end_type '{end_type}'")
+
+        self.end = V2, p2
         return self
 
 class Power(Process):
@@ -392,29 +390,14 @@ class Power(Process):
         super().__init__()
         self.type = 'power'
         self.power = power
-        #self.drawing = drawing  # Save the drawing context
 
     def plot(self, ax, config):
-        # If the start point is not set, use the last point from the drawing context
-        if self.start is None and self.drawing and self.drawing.last_point:
-            self.start = self.drawing.last_point
+
+        x1, y1 = self.start
 
         # If the end point is not defined, use parameters from the to() method
         if self.end is None:
             raise ValueError("End point must be set for 'Power' process.")
-
-        x1, y1 = self.start
-
-        # Ensure that end_y_or_type is set
-        if isinstance(self.end, tuple) and isinstance(self.end[1], str):
-            end_x, end_y_or_type = self.end
-            if end_y_or_type == 'x':
-                x2 = end_x
-                y2 = y1 * (x2 / x1) ** self.power
-            elif end_y_or_type == 'y':
-                y2 = end_x
-                x2 = (y2 / y1) ** (1 / self.power) * x1
-            self.end = (x2, y2)
 
         x2, y2 = self.end
 
@@ -427,8 +410,21 @@ class Power(Process):
 
         super().plot(ax, config)
 
-    def to(self, end_x, end_y_or_type=None):
-        self.end = (end_x, end_y_or_type)
+    def to(self, end, end_type='x'):
+        x1, y1 = self.start
+
+        if end_type == 'x':
+            x2 = end
+            y2 = y1 * (x2 / x1) ** self.power
+        elif end_type == 'y':
+            y2 = end
+            x2 = (y2 / y1) ** (1 / self.power) * x1
+        else:
+            x2 = end
+            y2 = end_type
+
+        self.end = x2, y2
+
         return self
 
 class Adiabatic(Process):
@@ -438,11 +434,11 @@ class Adiabatic(Process):
         self.type = 'adiabatic'
 
     def plot(self, ax, config):
-        if self.start is None:
-            if self.drawing and self.drawing.last_point:
-                self.start = self.drawing.last_point
-            else:
-                raise ValueError("Start point must be set for 'Adiabatic' process.")
+        #if self.start is None:
+            #if self.drawing and self.drawing.last_point:
+                #self.start = self.drawing.last_point
+            #else:
+                #raise ValueError("Start point must be set for 'Adiabatic' process.")
 
         V1, p1 = self.start
 
@@ -527,6 +523,24 @@ class Bezier(Process):
         return intersection_x, intersection_y
 
     def plot(self, ax, config):
+        # Needed to store x_values
+        if self.start and self.end: # Why this check? What happens else?
+            x1, y1 = self.start
+            x2, y2 = self.end
+            t = np.linspace(0, 1, 100)
+
+            if self.x1 is not None and self.x2 is not None:
+                # Third-order Bezier curve
+                self.x_values = (1-t)**3 * x1 + 3 * (1-t)**2 * t * self.x1 + 3 * (1-t) * t**2 * self.x2 + t**3 * x2
+                self.y_values = (1-t)**3 * y1 + 3 * (1-t)**2 * t * self.y1 + 3 * (1-t) * t**2 * self.y2 + t**3 * y2
+            else:
+                # Second-order Bezier curve
+                self.x_values = (1-t)**2 * x1 + 2 * (1-t) * t * self.x + t**2 * x2
+                self.y_values = (1-t)**2 * y1 + 2 * (1-t) * t * self.y + t**2 * y2
+
+            super().plot(ax, config)
+
+    def get_point(self, n):
         if self.start and self.end: # Why this check? What happens else?
             x1, y1 = self.start
             x2, y2 = self.end
@@ -542,17 +556,13 @@ class Bezier(Process):
                 self.y_values = (1-t)**2 * y1 + 2 * (1-t) * t * self.y + t**2 * y2
 
             self.coordinates = list(zip(self.x_values, self.y_values))
-            super().plot(ax, config)
-
-
-    def get_point(self, n):
         if 0 <= n < len(self.coordinates):
             return self.coordinates[n][0], self.coordinates[n][1]
         else:
             raise IndexError("Index out of the range of Bezier curve points.")
 
-
     def get_coordinates(self):
+        self.coordinates = list(zip(self.x_values, self.y_values))
         if self.coordinates:
             # Split the list of tuples into two lists for x and y coordinates
             x_values, y_values = zip(*self.coordinates)
@@ -560,10 +570,6 @@ class Bezier(Process):
         else:
             return [], []  # Return empty lists if there are no coordinates
 
-
-    def to(self, end_x, end_y=None):
-        self.end = (end_x, end_y)
-        return self
 
 class Parabola(Process):
     def __init__(self):
@@ -619,37 +625,41 @@ class Parabola(Process):
             super().plot(ax, config)
 
 
-def end_x(process):
-    if process.type == 'power':
-        x1, y1 = process.start
-        _, y2 = process.end
-        return x1 * (y2 / y1)**0.5
+#def end_x(process):
+    #if process.type == 'power':
+        #x1, y1 = process.start
+        #_, y2 = process.end
+        #return x1 * (y2 / y1)**0.5
+#def end_y(process):
+    #if process.type == 'power':
+        #x1, y1 = process.start
+        #x2, _ = process.end
+        #return y1 * (x2 / x1)**2
 
-def end_y(process):
-    if process.type == 'power':
-        x1, y1 = process.start
-        x2, _ = process.end
-        return y1 * (x2 / x1)**2
+# end_p, end_V are not needed:
+# Use
+# A1 = Adiabatic().to(v1,'volume')
+# v1 = A1.end[0]
+# p1 = A1.end[1]
 
-def end_v(process):
-    V1, p1 = process.start
-    if process.type == 'iso_t':
-        _, p2 = process.end
-        return V1 * p1 / p2
-    elif process.type == 'adiabatic':
-        _, p2 = process.end
-        return V1 * (p1 / p2) ** (1 / process.gamma)
-    return None
-
-def end_p(process):
-    V1, p1 = process.start
-    if process.type == 'iso_t':
-        V2, _ = process.end
-        return p1 * V1 / V2
-    elif process.type == 'adiabatic':
-        V2, _ = process.end
-        return (p1 * V1 ** process.gamma) / V2 ** process.gamma
-    return None
+#def end_v(process):
+    #V1, p1 = process.start
+    #if process.type == 'iso_t':
+        #_, p2 = process.end
+        #return V1 * p1 / p2
+    #elif process.type == 'adiabatic':
+        #_, p2 = process.end
+        #return V1 * (p1 / p2) ** (1 / process.gamma)
+    #return None
+#def end_p(process):
+    #V1, p1 = process.start
+    #if process.type == 'iso_t':
+        #V2, _ = process.end
+        #return p1 * V1 / V2
+    #elif process.type == 'adiabatic':
+        #V2, _ = process.end
+        #return (p1 * V1 ** process.gamma) / V2 ** process.gamma
+    #return None
 
 # Find intersection adiabatic and iso_t using (v1,p1) and (v3,p3)
 def common_pv(v1, p1, v3, p3, gamma=5/3):
