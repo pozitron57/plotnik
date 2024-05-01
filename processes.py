@@ -1,7 +1,7 @@
 from matplotlib.patches import FancyArrowPatch, ArrowStyle
 import numpy as np
 from scipy.interpolate import interp1d
-from .global_drawing import GlobalDrawing
+from .global_drawing import GLOBAL_DRAWING
 
 
 # Process() is a parent class for
@@ -19,6 +19,15 @@ class Process:
         self.extra_lines = [] # to store tox(), toy(), tozero() information
         self.xtick_labels = []
         self.ytick_labels = []
+        
+        self._add_to_global_drawing()
+
+    def _add_to_global_drawing(self):
+        try:
+            self.start = GLOBAL_DRAWING.last_point()
+            GLOBAL_DRAWING.store_process(self)
+        except ValueError:
+            pass
 
     def at(self, start_x, start_y):
         self.start = (start_x, start_y)
@@ -26,7 +35,6 @@ class Process:
 
     def to(self, end_x, end_y=None):
         self.end = (end_x, end_y)
-        GlobalDrawing.get_instance().add_process(self)
         return self
 
     def arrow(self, size=None, pos=0.54, color='black', reverse=False,
@@ -44,7 +52,6 @@ class Process:
         }
         if size is not None:
             self.arrow_params['size'] = size
-        GlobalDrawing.get_instance().add_process(self)
         return self
 
     def _add_arrow(self, ax, x_values, y_values):
@@ -88,22 +95,18 @@ class Process:
 
     def col(self, color):
         self.color = color
-        GlobalDrawing.get_instance().add_process(self)
         return self
 
     def ls(self, linestyle):
         self.linestyle = linestyle
-        GlobalDrawing.get_instance().add_process(self)
         return self
 
     def lw(self, linewidth):
         self.linewidth = linewidth
-        GlobalDrawing.get_instance().add_process(self)
         return self
 
     def zord(self, zorder):
         self.zorder = zorder
-        GlobalDrawing.get_instance().add_process(self)
         return self
     
     def dot(self, pos='end', **kwargs):
@@ -116,7 +119,6 @@ class Process:
                 self.dots_params['start'] = self.dots_params['end'] = dot_params
             else:
                 self.dots_params[pos] = dot_params
-        GlobalDrawing.get_instance().add_process(self)
         return self
 
     def _add_dots(self, ax):
@@ -178,7 +180,6 @@ class Process:
             else:
                 self.start_label = {'text': text1, 'ofst': start_ofst}
                 self.end_label = {'text': text2, 'ofst': end_ofst}
-        GlobalDrawing.get_instance().add_process(self)
         return self
 
 
@@ -224,12 +225,10 @@ class Process:
 
     def tox(self, type='both', color='k', ls='--', lw=1.6):
         self.extra_lines.append(('x', type, color, ls, lw))
-        GlobalDrawing.get_instance().add_process(self)
         return self
 
     def toy(self, type='both', color='k', ls='--', lw=1.6):
         self.extra_lines.append(('y', type, color, ls, lw))
-        GlobalDrawing.get_instance().add_process(self)
         return self
 
     def tozero(self, type='both', color='k', ls='--', lw=1.6):
@@ -430,7 +429,6 @@ class Power(Process):
 
     def to(self, end_x, end_y_or_type=None):
         self.end = (end_x, end_y_or_type)
-        GlobalDrawing.get_instance().add_process(self)
         return self
 
 class Adiabatic(Process):
@@ -452,26 +450,25 @@ class Adiabatic(Process):
         if self.end is None:
             raise ValueError("End point must be set for 'Adiabatic' process.")
 
-        # Ensure that end_y_or_type is set
-        if isinstance(self.end, tuple) and isinstance(self.end[1], str):
-            end_x, end_y_or_type = self.end
-            if end_y_or_type == 'volume':
-                V2 = end_x
-                p2 = (p1 * V1 ** self.gamma) / V2 ** self.gamma
-            elif end_y_or_type == 'pressure':
-                p2 = end_x
-                V2 = (p1 * V1 ** self.gamma / p2) ** (1 / self.gamma)
-            self.end = (V2, p2)
-
         V2, p2 = self.end
 
         self.x_values = np.linspace(V1, V2, 100)
         self.y_values = (p1 * V1 ** self.gamma) / self.x_values ** self.gamma
         super().plot(ax, config)
 
-    def to(self, end_x, end_y_or_type=None):
-        self.end = (end_x, end_y_or_type)
-        GlobalDrawing.get_instance().add_process(self)
+    def to(self, end, end_type="pressure"):
+        V1, p1 = self.start
+
+        if end_type == "pressure":
+            p2 = end
+            V2 = (p1 * V1 ** self.gamma / p2) ** (1 / self.gamma)
+        elif end_type == "volume":
+            V2 = end
+            p2 = (p1 * V1 ** self.gamma) / V2 ** self.gamma
+        else:
+            raise ValueError(f"Unknown end_type '{end_type}'")
+
+        self.end = V2, p2
         return self
 
 class Bezier(Process):
@@ -566,7 +563,6 @@ class Bezier(Process):
 
     def to(self, end_x, end_y=None):
         self.end = (end_x, end_y)
-        GlobalDrawing.get_instance().add_process(self)
         return self
 
 class Parabola(Process):

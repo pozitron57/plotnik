@@ -1,30 +1,52 @@
 # global_drawing.py
 
 class GlobalDrawing:
-    _instance = None
-
-    @classmethod
-    def get_instance(cls):
-        if cls._instance is None:
-            cls._instance = cls()
-        return cls._instance
-
     def __init__(self):
         self.drawing = None
+        self.processes = []
 
-    def set_drawing(self, drawing):
+    def set(self, drawing) -> None:
+        if self.drawing is not None:
+            raise ValueError("Global drawing has already been set")
         self.drawing = drawing
 
-    def add_process(self, process):
-        if self.drawing:
-            self.drawing.add_process(process)
-        else:
-            raise Exception("Drawing is not set.")
+    def store_process(self, process) -> None:
+        if self.drawing is None:
+            raise ValueError("Global drawing is not set")
+        self.processes.append(process)
 
-def setup_drawing():
-    from .drawing import Drawing
-    gd = GlobalDrawing.get_instance()
-    new_drawing = Drawing()
-    #new_drawing.initialize_axes()  # Инициализируем оси
-    gd.set_drawing(new_drawing)
-    return gd.drawing
+    def release_processes(self):
+        if self.drawing is None:
+            raise ValueError("Global drawing is not set")
+        for process in self.processes:
+            self.drawing.add_process(process)
+        self.processes = []
+
+    def release_drawing(self):
+        self.release_processes()
+        
+        drawing = self.drawing
+        self.drawing = None
+        self.processes = []
+
+        return drawing
+
+    def last_point(self):
+        if self.drawing is None:
+            raise ValueError("Global drawing is not set")
+        if len(self.processes) == 0:
+            return None
+        return self.processes[-1].end
+        
+
+class GlobalDrawingSingleton:
+    instance = None
+
+    def __new__(cls):
+        if cls.instance is None:
+            cls.instance = GlobalDrawing()
+        return cls.instance
+
+
+GLOBAL_DRAWING = GlobalDrawingSingleton()
+

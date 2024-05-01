@@ -4,6 +4,7 @@ from matplotlib import rcParams
 from matplotlib.patches import FancyArrowPatch
 import numpy as np
 from .processes import Process
+from .global_drawing import GLOBAL_DRAWING
 
 class Drawing:
     def __init__(self):
@@ -38,9 +39,12 @@ class Drawing:
         self.ax = None
 
     def __enter__(self):
+        GLOBAL_DRAWING.set(self)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        if GLOBAL_DRAWING.drawing is self:
+            GLOBAL_DRAWING.release_drawing()
         plt.close(self.fig)
 
     def __iadd__(self, process):
@@ -350,6 +354,9 @@ class Drawing:
 
 
     def show(self):
+        if GLOBAL_DRAWING.drawing is self:
+            GLOBAL_DRAWING.release_processes()
+
         xlen = self.config['xlim'][1] - self.config['xlim'][0]
         ylen = self.config['ylim'][1] - self.config['ylim'][0]
         lw = self.config['lw']*0.8
