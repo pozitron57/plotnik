@@ -93,8 +93,7 @@ with plotnik.Drawing() as d:
     d.save('filename.svg', crop=True)
 
 ```
-
-![image](https://github.com/pozitron57/plotnik/assets/9392655/04720dfd-a606-4039-86be-5c3a46e6f1b1)
+<img width="400" src="https://github.com/pozitron57/plotnik/assets/9392655/04720dfd-a606-4039-86be-5c3a46e6f1b1">
 
 ### 2. Linear() and grid()
 ``` python
@@ -120,7 +119,7 @@ with plotnik.Drawing() as d:
     d.grid(y_end=5)
     d.show()
 ```
-![image](https://github.com/pozitron57/plotnik/assets/9392655/673919fa-3dd1-4c92-997e-acf23d9e8c40)
+<img width="400" src="https://github.com/pozitron57/plotnik/assets/9392655/673919fa-3dd1-4c92-997e-acf23d9e8c40">
 
 ### 3. Carnot cycle in PV coordinates. Adiabatic(), Iso_t().
 ``` python
@@ -163,7 +162,7 @@ with plotnik.Drawing() as d:
 
     d.show()
 ```
-![image](https://github.com/pozitron57/plotnik/assets/9392655/cf1f0a52-f2e7-4e6a-9006-947515c56170)
+<img width="400" src="https://github.com/pozitron57/plotnik/assets/9392655/cf1f0a52-f2e7-4e6a-9006-947515c56170">
 
 ### 4. Cubic Bezier curve with dots on it
 ``` python
@@ -189,8 +188,7 @@ with plotnik.Drawing() as d:
 
     d.show()
 ```
-
-![image](https://github.com/pozitron57/plotnik/assets/9392655/b08c31dd-6b02-460d-ae2b-830bc6cfa392)
+<img width="400" src="https://github.com/pozitron57/plotnik/assets/9392655/b08c31dd-6b02-460d-ae2b-830bc6cfa392">
 
 ### 5. Power() to create shifted hyperbola y=k/x+b
 ```python
@@ -226,7 +224,7 @@ with plotnik.Drawing() as d:
 
     d.show()
 ```
-![image](https://github.com/pozitron57/plotnik/assets/9392655/d59e376e-0ef6-4f9e-a02a-cda4878efd36)
+<img width="400" src="https://github.com/pozitron57/plotnik/assets/9392655/d59e376e-0ef6-4f9e-a02a-cda4878efd36">
 
 ### 6. Two Adiabatic() & two Linear()
 ``` python
@@ -259,8 +257,7 @@ with plotnik.Drawing() as d:
 
     d.show()
 ```
-
-![image](https://github.com/pozitron57/plotnik/assets/9392655/bcaacd65-30f0-411d-96f7-f1f0989c0fa1)
+<img width="400" src="https://github.com/pozitron57/plotnik/assets/9392655/bcaacd65-30f0-411d-96f7-f1f0989c0fa1">
 
 ### 7. Bezier().connect() method
 
@@ -293,7 +290,7 @@ with plotnik.Drawing() as d:
 
     d.show()
 ```
-![image](https://github.com/pozitron57/plotnik/assets/9392655/0ff9d3d2-fc7b-4fcb-8579-59f208db8560)
+<img width="400" src="https://github.com/pozitron57/plotnik/assets/9392655/0ff9d3d2-fc7b-4fcb-8579-59f208db8560">
 
 ### 8. Bezier().get_coordinates()
 When plotting a complex curve as two separate processes (thus requiring two calls to `ax.plot()`),
@@ -333,7 +330,7 @@ with plotnik.Drawing() as d:
 
     d.show()
 ```
-![image](https://github.com/pozitron57/plotnik/assets/9392655/2ea4db27-f302-46bf-8e78-2f568297990e)
+<img width="400" src="https://github.com/pozitron57/plotnik/assets/9392655/2ea4db27-f302-46bf-8e78-2f568297990e">
 
 ### 9. Power()
 ``` python
@@ -364,8 +361,7 @@ with plotnik.Drawing() as d:
 
     d.show()
 ```
-
-![image](https://github.com/pozitron57/plotnik/assets/9392655/6f3aa682-4f9e-4b08-b426-9cba5448a094)
+<img width="400" src="https://github.com/pozitron57/plotnik/assets/9392655/6f3aa682-4f9e-4b08-b426-9cba5448a094">
 
 ### 10. Arrows and labels positioning
 ``` python
@@ -404,7 +400,7 @@ with plotnik.Drawing() as d:
 
     d.show()
 ```
-![image](https://github.com/pozitron57/plotnik/assets/9392655/4811a843-8bc3-48b1-947f-01900578dd3d)
+<img width="400" src="https://github.com/pozitron57/plotnik/assets/9392655/4811a843-8bc3-48b1-947f-01900578dd3d">
 
 ### 11. Customize grid()
 ``` python
@@ -434,7 +430,7 @@ with plotnik.Drawing() as d:
 
     d.show()
 ```
-![image](https://github.com/pozitron57/plotnik/assets/9392655/6d77acc6-2835-4116-8c9a-dc019ee9b72a)
+<img width="400" src="https://github.com/pozitron57/plotnik/assets/9392655/6d77acc6-2835-4116-8c9a-dc019ee9b72a">
 
 ### 12. Tangent red isotherm
 ``` python
@@ -472,7 +468,7 @@ with plotnik.Drawing() as d:
 
     d.show()
 ```
-<img width="567" alt="image" src="https://github.com/pozitron57/plotnik/assets/9392655/94d427bf-8c21-422e-ba01-bd6da6dfec38">
+<img width="400" src="https://github.com/pozitron57/plotnik/assets/9392655/94d427bf-8c21-422e-ba01-bd6da6dfec38">
 
 ## Some options
 Consider the followig syntax:
