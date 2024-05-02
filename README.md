@@ -330,7 +330,7 @@ with plotnik.Drawing() as d:
 
     d.show()
 ```
-<img width="400" src="https://github.com/pozitron57/plotnik/assets/9392655/2ea4db27-f302-46bf-8e78-2f568297990e">
+<img width="500" src="https://github.com/pozitron57/plotnik/assets/9392655/2ea4db27-f302-46bf-8e78-2f568297990e">
 
 ### 9. Power()
 ``` python
@@ -377,7 +377,6 @@ t1 = 4
 t2 = 2
 t3 = 6
 t4 = 8
-
 
 with plotnik.Drawing() as d:
     d.set_config(
@@ -468,7 +467,7 @@ with plotnik.Drawing() as d:
 
     d.show()
 ```
-<img width="400" src="https://github.com/pozitron57/plotnik/assets/9392655/94d427bf-8c21-422e-ba01-bd6da6dfec38">
+<img width=450 src=https://github.com/pozitron57/plotnik/assets/9392655/169d68fa-bcef-417d-ba43-a009e3cb907d>
 
 ## Some options
 Consider the followig syntax:
