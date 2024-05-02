@@ -472,6 +472,7 @@ with plotnik.Drawing() as d:
 
     d.show()
 ```
+<img width="567" alt="image" src="https://github.com/pozitron57/plotnik/assets/9392655/94d427bf-8c21-422e-ba01-bd6da6dfec38">
 
 ## Some options
 Consider the followig syntax:
