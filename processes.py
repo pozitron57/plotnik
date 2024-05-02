@@ -109,7 +109,7 @@ class Process:
         return self
     
     def dot(self, pos='end', **kwargs):
-        default_params = {'size': 8, 'color': 'black'}
+        default_params = {'size': 8, 'color': 'black', 'zorder': 5}
         # Add user specified parameters to default parameters
         dot_params = {**default_params, **kwargs}
 
@@ -126,9 +126,12 @@ class Process:
                 point = self.start if position == 'start' else self.end
                 # Check that point has 2 coordinates
                 if point and None not in point:
-                    ax.plot(point[0], point[1], marker='o', 
+                    ax.plot(point[0], point[1],
+                            marker=self.dots_params[position].get('marker', 'o'),
                             markersize=self.dots_params[position].get('size', 6),
-                            color=self.dots_params[position].get('color', 'k'))
+                            color=self.dots_params[position].get('color', 'k'),
+                            zorder=self.dots_params[position].get('zorder', '5'),
+                            )
 
     def calculate_ofst(self, point=None):
         # Check that config is accessible

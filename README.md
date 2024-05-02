@@ -15,8 +15,9 @@ The code has been mostly written by Chat-GPT.
 
 ## Basic usage
 
-The default font is 'STIX Two Text'. To switch to Computer Modern Roman, use `d.set_config(font='serif')`,
-noting that this requires LaTeX to be installed on your machine.
+The default font is 'STIX Two Text'. To switch to Computer Modern Roman, use
+`d.set_config(font='serif')`, noting that this requires LaTeX to be installed
+on your machine.
 
 To draw the curves, use `processes`: class `Process()` with its subclasses:
 
@@ -38,15 +39,16 @@ To draw the curves, use `processes`: class `Process()` with its subclasses:
 
       d += Bezier(x=2,y=2).at(1,1).to(3,1)
 
-  draws quadratic Bezier curve from (1,1) to (3,1) with a single control point at (2,2).
-  Similarly,
+  draws quadratic Bezier curve from (1,1) to (3,1) with a single control point
+  at (2,2). Similarly,
 
       d += Bezier(x1=3,y1=7, x2=5,y2=3).at(1,5).to(7,5)
 
-  this code plots a cubic Bezier curve, resembling a sine wave, with two control points at (x1, y1) and (x2, y2).
+  this code plots a cubic Bezier curve, resembling a sine wave, with two
+  control points at (x1, y1) and (x2, y2). Note that `d +=` is *usually* optional.
 
-Additionally, standard matplotlib syntax can be used to add text and lines to the plot,
-for example, `d.ax.plot(x, y)`.
+Additionally, standard matplotlib syntax can be used to add text and lines to
+the plot, for example, `d.ax.plot(x, y)`.
 
 
 ## Examples
@@ -77,6 +79,8 @@ with plotnik.Drawing() as d:
     A1 = Adiabatic().at(v1,p1).to(v2, 'volume').arrow().dot()
     p2 = A1.end[1] # A1.end returns coordinates (x,y) for the last point of A1 process
 
+    # Process T1 has no .at(), so it takes the last point from the previous
+    # process A1 as an initial point
     T1 = Iso_t().to(v1, 'volume').arrow().dot().label(2, dy=0)
     p3 = T1.end[1]
 
@@ -432,42 +436,125 @@ with plotnik.Drawing() as d:
 ```
 ![image](https://github.com/pozitron57/plotnik/assets/9392655/6d77acc6-2835-4116-8c9a-dc019ee9b72a)
 
+### 12. Tangent red isotherm
+``` python
+import plotnik
+from plotnik.processes import *
+
+p1=3
+v1=1
+p2=1
+v2=4
+a = (p1-p2) / (v1-v2)
+b = p1 - a*v1
+vm = -b/(2*a)
+pm = a*vm + b
+
+with plotnik.Drawing() as d:
+    d.set_config(
+        fontsize=24,
+        yname='$p$',
+        xname='$V$',
+        xlim=[0,5],
+        ylim=[0,4],
+        zero_ofst=[0.2, 0.38],
+    )
+
+    Linear().at(v1,p1).to(v2,p2).arrow(pos=0.3).dot('both').label(1,2).toy().tox()
+    State().at(vm,pm).dot().tox().toy()
+    Iso_t().at(vm,pm).to(v1*1.35,'volume').lw(1.4).col('#EE3344')
+    Iso_t().at(vm,pm).to(v2*1.16,'volume').lw(1.4).col('#EE3344')
+
+    d.ax.set_yticks([p1, p2, pm], ['$p_1$', '$p_2$', r'$p_\text{м}$'])
+    d.ax.set_xticks([v1, v2, vm], ['$V_1$', '$V_2$', r'$V\!_\text{м}$'])
+
+    d.grid(step=.5, y_end=3.5, x_end=4.5, color='#dddddd')
+
+    d.show()
+```
+
+## Some options
+Consider the followig syntax:
+
+`Linear().at().to().arrow().dot().label().toy().tox().tozero().col().lw().ls().zord()`.
+
+`.at(x1,y1)`: set starting point. Uses previous process last point if not set.
+
+`.to(x2,y2)`: set end point.
+
+`.arrow(size=None, pos=0.54, color='black', reverse=False,
+              filled=True, zorder=3, head_length=0.6,
+              head_width=0.2)`
+
+  - `pos` sets position of the arrow on the line (from 0 to 1).
+  - `reverse=True` rotates the arrow on 180 degrees.
+  - `filled=False` doesn't look well but produces not filled arrow.
+
+`.dot(pos='end', size=8, color='black', zorder=5, marker='o')`
+  - `.dot()` or `.dot('end')` or `.dot(pos='end')` adds only last point;
+  - `.dot('start')` adds only start point;
+  - `.dot('both')` adds two points.
+  - `.dot(size=25)
+  - `marker` are standart matplotlib markers, see
+    [full list](https://matplotlib.org/stable/api/markers_api.html)
+  - `zorder` can change the order it appears relative to other elements
+    (useful to plot marker above or below grid or process etc.).
+
+`.label()` add 1 or two labels.
+
+`.tox(), .toy(), .tozero()` draw lines to, correspondingly, horizontal axis,
+vertical axis and zero. Default linestyle is dashed line, can be changed like
+`.tox(ls='-')`. By default, draw lines both for start and end of the process.
+Can be changed like `.tox('end')` or `.tox('start')`.
+
+`.col('red')` set color for the line.
+
+`.lw(1)` set linewidth for the process.
+
+`.ls('--')` set linestyle for the process.
+
+`.zord(5)` set zorder for the process.
+
+
 
 ## TODO
 
+- Repair examples 7 and 8 so `d +=` won't be required.
+
 - Revise the arrow positioning logic to ensure they are accurately centered.
 
-- In the set_config function, add the capability to globally modify arrowsize,
+- In the `set_config()` function, add the capability to globally modify arrowsize,
   dotsize, and lw (line width) for processes.
 
-  Introduce options in the set_config() to globally adjust the size of arrows,
+  Introduce options in the `set_config()` to globally adjust the size of arrows,
   dots, and line width for processes. For instance,
   include settings like `dots_all=True`, `dots_size=10` and `arrows_all=True`,
-  `arrows_size=23`. 
+  `arrows_size=23`.
 
 - Integrate the feature to select different coordinates. For instance, if all
 processes are initially plotted in x, y coordinates, there should be an option
 to view them in transformed coordinates like 1/x, y^2. Example syntax could be:
-d.transform_coordinates(newx = 1/x, newy = y\**2).
+`d.transform_coordinates(newx = 1/x, newy = y**2)`.
 
-- Address the issue where d.save() generates erroneous results when used without
-a prior call to d.show(), ensuring reliable save functionality.
+- Address the issue where `d.save()` generates erroneous results when used without
+a prior call to `d.show()`, ensuring reliable save functionality.
 
-- .xtick() and d.add_xticks() use different codes for tick positioning.
+- `.xtick()` and `d.add_xticks()` use different codes for tick positioning.
 
-- make .xtick() use matplotlib ax.set_xticks() method
+- make `.xtick()` use matplotlib `ax.set_xticks()` method
 
 - Improve the algorithm for automatic determination of positions and sizes for
 labels, ticks, and arrows.
 
-- When need Bezier() only to calculate coordinates, you have to add it to Drawing() like so:
+- When need `Bezier()` only to calculate coordinates, you have to add it to
+  `Drawing()` like so:
 
       d += (B1:= Bezier(x=1.8,y=2.8).at(1, 10).to(4, 2.5).lw(0) )
       x,y = B1.get_coordinates()
 
   Rewrite the code so one can use
   
-      B1 = Bezier(x=1.8,y=2.8).at(1, 10).to(4, 2.5)
+      B1 = Bezier(x=1.8,y=2.8).at(1, 10).to(4, 2.5).hide()
       x,y = B1.get_coordinates()
 
   without adding it an actual figure.
