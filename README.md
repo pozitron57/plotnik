@@ -490,7 +490,7 @@ Consider the followig syntax:
   - `.dot()` or `.dot('end')` or `.dot(pos='end')` adds only last point;
   - `.dot('start')` adds only start point;
   - `.dot('both')` adds two points.
-  - `.dot(size=25)
+  - `.dot(size=25)`
   - `marker` are standart matplotlib markers, see
     [full list](https://matplotlib.org/stable/api/markers_api.html)
   - `zorder` can change the order it appears relative to other elements
