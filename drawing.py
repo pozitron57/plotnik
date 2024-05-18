@@ -33,6 +33,8 @@ class Drawing:
                        'center_x': None,
                        'center_y': None,
                        'center': None,
+                       'y_gap': None,
+                       'y_gap_size': 0.05,
                        }
         self.grid_config = {}  # Initialization of grid_config as an empty dictionary.
         self.fig = None
@@ -106,11 +108,11 @@ class Drawing:
         self.config.update(kwargs)
         self.update_rcParams()
         
-        # Set the axes limits if they have been specified.
-        if 'xlim' in kwargs:
-            self.ax.set_xlim(kwargs['xlim'])
-        if 'ylim' in kwargs:
-            self.ax.set_ylim(kwargs['ylim'])
+        ## Set the axes limits if they have been specified.
+        #if 'xlim' in kwargs:
+            #self.ax.set_xlim(kwargs['xlim'])
+        #if 'ylim' in kwargs:
+            #self.ax.set_ylim(kwargs['ylim'])
 
     def add_process(self, process):
         if self.ax is None:
@@ -406,30 +408,119 @@ class Drawing:
 
         axes_arrow_scale = self.config.get('axes_arrow_scale', 1)
 
-        # X axis
+        ## X axis
+        #arrowstyle_x = f"-|>,head_length={hl_x},head_width={hw_x}"
+        #arrow_x = FancyArrowPatch((xlim[0], 0), (xlim[1], 0),
+                                  #clip_on=False,
+                                  #arrowstyle=arrowstyle_x,
+                                  #mutation_scale = 200 / xlen * axes_arrow_scale,
+                                  #mutation_aspect=aspect,
+                                  #shrinkA=0,
+                                  #shrinkB=0,
+                                  #lw=lw, color='k', zorder=5)
+        #self.ax.add_patch(arrow_x)
+
+        # Set x_gap
+        x_gap = self.config.get('x_gap', None)
+        x_gap_size = self.config.get('x_gap_size', 0.05) * xlen
+        x_gap_margin = x_gap_size * 0.5  # Small gap before and after the dots
+        
+        if x_gap is not None:
+            arrow_x_segments = [
+                ((xlim[0], 0), (x_gap - x_gap_size / 2 - x_gap_margin, 0)),
+                ((x_gap + x_gap_size / 2 + x_gap_margin, 0), (xlim[1] - hl_x, 0))  # Adjust to avoid double arrow
+            ]
+        else:
+            arrow_x_segments = [((xlim[0], 0), (xlim[1] - hl_x, 0))]  # Adjust to add arrow
+        
+        # Draw X axis segments
         arrowstyle_x = f"-|>,head_length={hl_x},head_width={hw_x}"
-        arrow_x = FancyArrowPatch((xlim[0], 0), (xlim[1], 0),
-                                  clip_on=False,
-                                  arrowstyle=arrowstyle_x,
-                                  mutation_scale = 200 / xlen * axes_arrow_scale,
-                                  mutation_aspect=aspect,
-                                  shrinkA=0,
-                                  shrinkB=0,
-                                  lw=lw, color='k', zorder=5)
-        self.ax.add_patch(arrow_x)
+        for i, (start, end) in enumerate(arrow_x_segments):
+            if i == len(arrow_x_segments) - 1:
+                # Add arrow to the last segment
+                arrow_x = FancyArrowPatch(start, end,
+                                          clip_on=False,
+                                          arrowstyle=arrowstyle_x,
+                                          mutation_scale=200 / xlen * axes_arrow_scale,
+                                          mutation_aspect=aspect,
+                                          shrinkA=0,
+                                          shrinkB=0,
+                                          lw=lw, color='k', zorder=5)
+            else:
+                # Add regular line segments
+                arrow_x = FancyArrowPatch(start, end,
+                                          clip_on=False,
+                                          arrowstyle='-',
+                                          mutation_scale=200 / xlen * axes_arrow_scale,
+                                          mutation_aspect=aspect,
+                                          shrinkA=0,
+                                          shrinkB=0,
+                                          lw=lw, color='k', zorder=5)
+            self.ax.add_patch(arrow_x)
+        
+        # Add dots to indicate the gap on X axis
+        if x_gap is not None:
+            dot_size = lw * 1.2  # Adjust dot size
+            self.ax.plot(x_gap - x_gap_size / 2, 0, 'ko', markersize=dot_size, clip_on=False)
+            self.ax.plot(x_gap, 0, 'ko', markersize=dot_size, clip_on=False)
+            self.ax.plot(x_gap + x_gap_size / 2, 0, 'ko', markersize=dot_size, clip_on=False)
+        
+            # Add small gaps before and after the dots
+            self.ax.plot(x_gap - x_gap_size / 2 - x_gap_margin, 0, 'w|', markersize=dot_size * 1.5, clip_on=False, linewidth=lw)
+            self.ax.plot(x_gap + x_gap_size / 2 + x_gap_margin, 0, 'w|', markersize=dot_size * 1.5, clip_on=False, linewidth=lw)
 
-        # Y axis
+        
+
+
+        # Set y_gap
+        y_gap = self.config['y_gap']
+        y_gap_size = self.config['y_gap_size'] * ylen
+        gap_margin = y_gap_size * 0.5  # Small gap before and after the dots
+
+        if y_gap is not None:
+            arrow_y_segments = [
+                ((0, ylim[0]), (0, y_gap - y_gap_size / 2 - gap_margin)),
+                ((0, y_gap + y_gap_size / 2 + gap_margin), (0, ylim[1] - 0.08))  # Adjust to avoid double arrow
+            ]
+        else:
+            arrow_y_segments = [((0, ylim[0]), (0, ylim[1] - 0.08))]  # Adjust to add arrow
+
+        # Y axis segments
         arrowstyle_y = f"-|>,head_length={hl_y},head_width={hw_y}"
-        arrow_y = FancyArrowPatch((0, ylim[0]), (0, ylim[1]),
-                                  clip_on=False,
-                                  arrowstyle=arrowstyle_y,
-                                  mutation_scale= 200 / xlen * axes_arrow_scale,
-                                  mutation_aspect=aspect,
-                                  shrinkA=0,
-                                  shrinkB=0,
-                                  lw=lw, color='k', zorder=5)
-        self.ax.add_patch(arrow_y)
+        for i, (start, end) in enumerate(arrow_y_segments):
+            if i == len(arrow_y_segments) - 1:
+                # Add arrow to the last segment
+                arrow_y = FancyArrowPatch(start, end,
+                                          clip_on=False,
+                                          arrowstyle=arrowstyle_y,
+                                          mutation_scale=200 / xlen * axes_arrow_scale,
+                                          mutation_aspect=aspect,
+                                          shrinkA=0,
+                                          shrinkB=0,
+                                          lw=lw, color='k', zorder=5)
+            else:
+                # Add regular line segments
+                arrow_y = FancyArrowPatch(start, end,
+                                          clip_on=False,
+                                          arrowstyle='-',
+                                          mutation_scale=200 / xlen * axes_arrow_scale,
+                                          mutation_aspect=aspect,
+                                          shrinkA=0,
+                                          shrinkB=0,
+                                          lw=lw, color='k', zorder=5)
+            self.ax.add_patch(arrow_y)
 
+        # Add dots to indicate the gap
+        if y_gap is not None:
+            dot_size = lw * 1.2  # Adjust dot size
+            self.ax.plot(0, y_gap - y_gap_size / 2, 'ko', markersize=dot_size, clip_on=False)
+            self.ax.plot(0, y_gap, 'ko', markersize=dot_size, clip_on=False)
+            self.ax.plot(0, y_gap + y_gap_size / 2, 'ko', markersize=dot_size, clip_on=False)
+
+            # Add small gaps before and after the dots
+            self.ax.plot(0, y_gap - y_gap_size / 2 - gap_margin, 'w|', markersize=dot_size*1.5, clip_on=False, linewidth=lw)
+            self.ax.plot(0, y_gap + y_gap_size / 2 + gap_margin, 'w|', markersize=dot_size*1.5, clip_on=False, linewidth=lw)
+       
 
         # Set labels padding. Used in d.add_xticks() but NOT in d.ax.add_xticks()
         xlabel_ofst = self.config.get('xlabel_ofst', [xlen * 0.02, ylen * 0.14 * self.config['fontsize']/30])
