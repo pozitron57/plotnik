@@ -1,0 +1,23 @@
+# Changes here will be overwritten by Copier
+_commit: v2.0.1
+_src_path: gh:lincc-frameworks/python-project-template
+author_email: sergey@lisakov.com
+author_name: Sergey Lisakov
+create_example_module: false
+custom_install: true
+enforce_style: []
+failure_notification: []
+include_benchmarks: false
+include_docs: true
+include_notebooks: false
+mypy_type_checking: none
+package_name: plotnik
+project_license: BSD
+project_name: plotnik
+project_organization: pozitron57
+python_versions:
+- '3.8'
+- '3.9'
+- '3.10'
+- '3.11'
+- '3.12'
