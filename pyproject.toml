@@ -1,0 +1,47 @@
+[project]
+name = "plotnik"
+license = {file = "LICENSE"}
+readme = "README.md"
+authors = [
+    { name = "Sergey Lisakov", email = "sergey@lisakov.com" }
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: BSD License",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+]
+dynamic = ["version"]
+requires-python = ">=3.8"
+dependencies = [
+    "numpy",
+    "matplotlib",
+    "scipy",
+]
+
+[project.urls]
+"Source Code" = "https://github.com/pozitron57/plotnik"
+
+# On a mac, install optional dependencies with `pip install '.[dev]'` (include the single quotes)
+[project.optional-dependencies]
+dev = [
+    "pre-commit", # Used to run checks before finalizing a git commit
+    "pytest",
+]
+
+[build-system]
+requires = [
+    "setuptools>=62", # Used to build and package the Python project
+    "setuptools_scm>=6.2", # Gets release version from git. Makes it available programmatically
+]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+write_to = "src/plotnik/_version.py"
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+]
