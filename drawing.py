@@ -13,8 +13,8 @@ class Drawing:
                        'fontsize': 34,
                        'lw': 3.2,
                        'aspect': 1,
-                       'xlim': [0, 10.7],
-                       'ylim': [0, 10.7],
+                       'xlim': [0, 11.2],
+                       'ylim': [0, 11.2],
                        'xname': '',
                        'yname': '',
                        'yname_y': None,
@@ -366,6 +366,10 @@ class Drawing:
         xlim = self.config.get('xlim', self.ax.get_xlim())
         ylim = self.config.get('ylim', self.ax.get_ylim())
 
+        self.ax.set_xlim([xlim[0], xlim[1]])
+        self.ax.set_ylim([ylim[0], ylim[1]])
+
+
         # Set aspect
         if 'aspect' in self.config:
             self.ax.set_aspect(self.config['aspect'])
@@ -397,7 +401,7 @@ class Drawing:
                 hw_x = longer_axis * 0.03 / aspect * k
                 hw_y = longer_axis * 0.03 * k
             else:
-                hw_x = axes_arrow_width / aspect * k
+                hw_x = axes_arrow_wid1h / aspect * k
                 hw_y = axes_arrow_width * k
             if axes_arrow_length is None:
                 hl_x = longer_axis * 0.08 * k
@@ -483,13 +487,14 @@ class Drawing:
                 ((0, y_gap + y_gap_size / 2 + gap_margin), (0, ylim[1] - 0.08))  # Adjust to avoid double arrow
             ]
         else:
-            arrow_y_segments = [((0, ylim[0]), (0, ylim[1] - 0.08))]  # Adjust to add arrow
+            arrow_y_segments = [((0, ylim[0]), (0, ylim[1]))]  # Adjust to add arrow
 
         # Y axis segments
         arrowstyle_y = f"-|>,head_length={hl_y},head_width={hw_y}"
         for i, (start, end) in enumerate(arrow_y_segments):
             if i == len(arrow_y_segments) - 1:
                 # Add arrow to the last segment
+                print(end)
                 arrow_y = FancyArrowPatch(start, end,
                                           clip_on=False,
                                           arrowstyle=arrowstyle_y,

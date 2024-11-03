@@ -32,8 +32,12 @@ class Process:
         self.start = (start_x, start_y)
         return self
 
-    def to(self, end_x, end_y=None):
-        self.end = (end_x, end_y)
+    def to(self, x_or_pair, y=None):
+        if isinstance(x_or_pair, tuple) and y is None:
+            x, y = x_or_pair
+        else:
+            x, y = x_or_pair, y
+        self.end = (x, y)
         return self
 
     def arrow(self, size=None, pos=0.54, color='black', reverse=False,
