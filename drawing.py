@@ -526,6 +526,10 @@ class Drawing:
         xlabel_ofst = self.config.get('xlabel_ofst', [xlen * 0.02, ylen * 0.14 * self.config['fontsize']/30])
         ylabel_ofst = self.config.get('ylabel_ofst', [xlen * 0.05 * aspect, ylen * 0.03])
 
+        # Draw grid
+        # Essential to do it before xname, yname, otherwise they may be shifted
+        if self.config.get('grid', False):
+            self._add_grid()
 
         # Add axis labels xname, yname. If xname_ofst, yname_ofst are not
         # specified, then yname is vertically aligned with ylabels, and xname
@@ -640,10 +644,6 @@ class Drawing:
                 self.ax.text(-zero_ofst[0], -zero_ofst[1], '$0$',
                              fontsize=self.config['fontsize'], ha='right',
                              va='baseline')
-
-        # Draw grid
-        if self.config.get('grid', False):
-            self._add_grid()
 
         plt.show()
 
