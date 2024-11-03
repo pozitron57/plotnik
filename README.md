@@ -59,8 +59,7 @@ adiabat, and isotherm. The goal was to free the user from the need to perform
 calculations and to provide a simple interface for constructing such graphs.
 
 ``` python
-import plotnik
-from plotnik.processes import *
+from plotnik import *
 
 v1 = 3
 v2 = 9
@@ -68,7 +67,7 @@ v3 = v1
 
 p1 = 9
 
-with plotnik.Drawing() as d:
+with Drawing() as d:
     d.set_config(
         xname='$V$',
         yname='$p$',
@@ -97,8 +96,7 @@ with plotnik.Drawing() as d:
 
 ### 2. Linear() and grid()
 ``` python
-import plotnik
-from plotnik.processes import *
+from plotnik import *
 
 u1 = 2
 u2 = 4
@@ -106,7 +104,7 @@ u2 = 4
 v1 = 3
 v2 = 6
 
-with plotnik.Drawing() as d:
+with Drawing() as d:
     d.set_config(
         yname='$U$',
         xname='$V$',
@@ -123,15 +121,14 @@ with plotnik.Drawing() as d:
 
 ### 3. Carnot cycle in PV coordinates. Adiabatic(), Iso_t().
 ``` python
-import plotnik
-from plotnik.processes import *
+from plotnik import *
 
 p1 = 10
 v1 = 3
 v2 = 6
 v3 = 10
 
-with plotnik.Drawing() as d:
+with Drawing() as d:
     d.set_config(
         fontsize=30,
         yname='$p$',
@@ -166,10 +163,9 @@ with plotnik.Drawing() as d:
 
 ### 4. Cubic Bezier curve with dots on it
 ``` python
-import plotnik
-from plotnik.processes import *
+from plotnik import *
 
-with plotnik.Drawing() as d:
+with Drawing() as d:
     d.set_config(yname=r'$x$',
                  xname=r'$t$',
                  xlim=[0,12],
@@ -192,8 +188,7 @@ with plotnik.Drawing() as d:
 
 ### 5. Power() to create shifted hyperbola y=k/x+b
 ```python
-import plotnik
-from plotnik.processes import *
+from plotnik import *
 
 x1 = 3
 y1 = 2
@@ -204,7 +199,7 @@ y2 = y1
 x3 = x1
 y3 = 3*y1
 
-with plotnik.Drawing() as d:
+with Drawing() as d:
     d.set_config(
         fontsize=31,
         yname='$p$',
@@ -228,15 +223,14 @@ with plotnik.Drawing() as d:
 
 ### 6. Two Adiabatic() & two Linear()
 ``` python
-import plotnik
-from plotnik.processes import *
+from plotnik import *
 
 v1  = 2
 v2  = 5
 p12 = 8
 p34 = 3
 
-with plotnik.Drawing() as d:
+with Drawing() as d:
     d.set_config(
          yname='$p$',
          xname='$V$',
@@ -265,10 +259,9 @@ This method is used to create a smooth curve that must pass through the specifie
 in this case, (3,60).
 
 ``` python
-import plotnik
-from plotnik.processes import *
+from plotnik import *
 
-with plotnik.Drawing() as d:
+with Drawing() as d:
     d.set_config(
         aspect=1/20,
         yname=r'$\alpha, \%$',
@@ -300,10 +293,9 @@ Then, append these coordinates to the other process.
 Matplotlib will seamlessly join these segments when plotting them in a single `ax.plot()` call.
 
 ``` python
-import plotnik
-from plotnik.processes import *
+from plotnik import *
 
-with plotnik.Drawing() as d:
+with Drawing() as d:
     d.set_config(
         yname=r'$V_{\rm погр},\rm{см}^3$',
         xname=r'$\rho,\rm{г}/\rm{см}^3$',
@@ -334,14 +326,13 @@ with plotnik.Drawing() as d:
 
 ### 9. Power()
 ``` python
-import plotnik
-from plotnik.processes import *
+from plotnik import *
 
 v1 = 8
 u1 = 6
 v2 = 3.5
 
-with plotnik.Drawing() as d:
+with Drawing() as d:
     d.set_config(
         fontsize=31,
         yname='$U$', 
@@ -365,8 +356,7 @@ with plotnik.Drawing() as d:
 
 ### 10. Arrows and labels positioning
 ``` python
-import plotnik
-from plotnik.processes import *
+from plotnik import *
 
 v1 = 2
 v2 = v1
@@ -378,7 +368,7 @@ t2 = 2
 t3 = 6
 t4 = 8
 
-with plotnik.Drawing() as d:
+with Drawing() as d:
     d.set_config(
         yname='$V$',
         lw=3.2,
@@ -403,13 +393,12 @@ with plotnik.Drawing() as d:
 
 ### 11. Customize grid()
 ``` python
-import plotnik
-from plotnik.processes import *
+from plotnik import *
 
 B = [0, 0.2, 0]
 t = [0, 2,   4]
 
-with plotnik.Drawing() as d:
+with Drawing() as d:
     d.set_config(yname='$B,$Тл', xname='$t,$с',
                  xlim=[0,6.3],
                  xname_x=5,
@@ -433,8 +422,7 @@ with plotnik.Drawing() as d:
 
 ### 12. Tangent red isotherm
 ``` python
-import plotnik
-from plotnik.processes import *
+from plotnik import *
 
 p1=3
 v1=1
@@ -445,7 +433,7 @@ b = p1 - a*v1
 vm = -b/(2*a)
 pm = a*vm + b
 
-with plotnik.Drawing() as d:
+with Drawing() as d:
     d.set_config(
         fontsize=24,
         yname='$p$',
