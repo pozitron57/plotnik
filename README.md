@@ -53,7 +53,7 @@ the plot, for example, `d.ax.plot(x, y)`.
 
 ## Examples
 ### 1. V=const, adiabatic, isothermal
-This example illustrates well the purpose behind the creation of the library.
+This example illustrates the purpose behind the creation of the library.
 It is necessary to draw a cycle in pV-coordinates, consisting of an isochore,
 adiabat, and isotherm. The goal was to free the user from the need to perform
 calculations and to provide a simple interface for constructing such graphs.
