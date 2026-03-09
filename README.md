@@ -76,12 +76,13 @@ with Drawing() as d:
     )
 
     A1 = Adiabatic().at(v1,p1).to(v2, 'volume').arrow().dot()
-    p2 = A1.end[1] # A1.end returns coordinates (x,y) for the last point of A1 process
+    # Now you can access p2 like so: p2 = A1.end[1]
+    # A1.end returns coordinates (x,y) for the last point of A1 process
 
     # Process T1 has no .at(), so it takes the last point from the previous
     # process A1 as an initial point
     T1 = Iso_t().to(v1, 'volume').arrow().dot().label(2, dy=0)
-    p3 = T1.end[1]
+    # Now you can access p3 like so: p3 = T1.end[1]
 
     Linear().to(v1,p1).arrow().dot().label(3,1)
 
@@ -89,7 +90,9 @@ with Drawing() as d:
     # `crop=True` is only compatible with SVG files and requires the installation of `Inkscape` on your machine.
     # This feature removes paths named `patch_1` and `patch_2`, which, in my case, do not contain any paths
     # but add a whitespace margin.
-    d.save('filename.svg', crop=True)
+    # Usage: d.save('filename.svg', crop=True)
+
+    d.save('filename.svg')
 
 ```
 <img width="400" src="https://github.com/pozitron57/plotnik/assets/9392655/04720dfd-a606-4039-86be-5c3a46e6f1b1">
