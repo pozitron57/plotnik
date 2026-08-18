@@ -561,9 +561,17 @@ class Drawing:
                              self.config['yname'], ha='right', va='top',
                              fontsize=self.config['fontsize'])
             else:
-                y_pos = self.config['yname_y'] if self.config['yname_y'] is not None else ylim[1] + head_data_y
-                # default: top edge of the label is level with the arrow tip
-                va = 'center' if self.config['yname_y'] is not None else 'top'
+                if self.config['yname_y'] is not None:
+                    y_pos, va = self.config['yname_y'], 'center'
+                else:
+                    # top of the glyphs level with the arrow tip. Anchoring by the
+                    # baseline minus the measured ink height keeps that true for a
+                    # low 'x' as well as for a tall 'F' (va='top' would sink both by
+                    # the font ascent).
+                    _tip = self.ax.transData.transform((0, ylim[1] + head_data_y))[1]
+                    _ink = self._ink_top(self.config['yname'], self.config['fontsize'])
+                    y_pos = _tr.inverted().transform((_x0d[0], _tip - _ink * _pxpt))[1]
+                    va = 'baseline'
                 self.ax.text(_ytick_x, y_pos,
                              self.config['yname'], ha='right', va=va,
                              fontsize=self.config['fontsize'])
@@ -575,8 +583,10 @@ class Drawing:
                              self.config['xname'], ha='right', va='top',
                              fontsize=self.config['fontsize'])
             else:
+                # default: the label ends where the arrow ends, mirroring the y name
+                # whose top edge is level with its arrow tip
                 x_pos = self.config['xname_x'] if self.config['xname_x'] is not None else xlim[1] + head_data_x
-                ha = 'center' if self.config['xname_x'] is not None else 'left'
+                ha = 'center' if self.config['xname_x'] is not None else 'right'
                 if _has_xtick_labels:
                     # sit on the same baseline as the xtick labels
                     y_pos, va_x = _xtick_y, 'baseline'
