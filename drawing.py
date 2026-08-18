@@ -27,6 +27,8 @@ class Drawing:
                        'xname_x': None,
                        'xname_ofst': None,
                        'yname_ofst': None,
+                       'xaxis': True,   # draw the horizontal axis
+                       'yaxis': True,   # draw the vertical axis
                        'zero': True,
                        'zero_x': 0,
                        'zero_ofst': None,
@@ -487,11 +489,14 @@ class Drawing:
             _t.set_x(_ytick_x)
 
         # X axis
+        draw_xaxis = self.config.get('xaxis', True)
         x_gap = self.config.get('x_gap', None)
         x_gap_size = self.config.get('x_gap_size', 0.05) * xlen
         x_gap_margin = x_gap_size * 0.5
 
-        if x_gap is not None:
+        if not draw_xaxis:
+            pass
+        elif x_gap is not None:
             self.ax.plot([xlim[0], x_gap - x_gap_size / 2 - x_gap_margin], [0, 0],
                          'k-', lw=lw, clip_on=False, zorder=5)
             self.ax.annotate('',
@@ -514,11 +519,14 @@ class Drawing:
                 annotation_clip=False)
 
         # Y axis
+        draw_yaxis = self.config.get('yaxis', True)
         y_gap = self.config['y_gap']
         y_gap_size = self.config['y_gap_size'] * ylen
         gap_margin = y_gap_size * 0.5
 
-        if y_gap is not None:
+        if not draw_yaxis:
+            pass
+        elif y_gap is not None:
             self.ax.plot([0, 0], [ylim[0], y_gap - y_gap_size / 2 - gap_margin],
                          'k-', lw=lw, clip_on=False, zorder=5)
             self.ax.annotate('',
