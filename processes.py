@@ -32,8 +32,12 @@ class Process:
         self.start = (start_x, start_y)
         return self
 
-    def to(self, end_x, end_y=None):
-        self.end = (end_x, end_y)
+    def to(self, x_or_pair, y=None):
+        if isinstance(x_or_pair, tuple) and y is None:
+            x, y = x_or_pair
+        else:
+            x, y = x_or_pair, y
+        self.end = (x, y)
         return self
 
     def arrow(self, size=None, pos=0.54, color='black', reverse=False,
@@ -483,15 +487,11 @@ class Bezier(Process):
         self.coordinates = []  # List to store the coordinates
 
     def connect(self, process1, process2):
-        # Find the intersection point
-        intersection_point = self._find_intersection(process1, process2)
-
-        # Set the start and end points, as well as the control point
+        # Store references; intersection is resolved in plot() once both processes are plotted
+        self._connect_process1 = process1
+        self._connect_process2 = process2
         self.start = process1.end if process1.end else process1.start
         self.end = process2.start if process2.start else process2.end
-        self.x = intersection_point[0]
-        self.y = intersection_point[1]
-
         return self
 
     def _find_intersection(self, process1, process2):
@@ -525,53 +525,51 @@ class Bezier(Process):
 
         return intersection_x, intersection_y
 
+    def _compute_xy(self):
+        if not self.start or not self.end:
+            return
+        x1, y1 = self.start
+        x2, y2 = self.end
+        t = np.linspace(0, 1, 100)
+        if self.x1 is not None and self.x2 is not None:
+            self.x_values = (1-t)**3*x1 + 3*(1-t)**2*t*self.x1 + 3*(1-t)*t**2*self.x2 + t**3*x2
+            self.y_values = (1-t)**3*y1 + 3*(1-t)**2*t*self.y1 + 3*(1-t)*t**2*self.y2 + t**3*y2
+        else:
+            self.x_values = (1-t)**2*x1 + 2*(1-t)*t*self.x + t**2*x2
+            self.y_values = (1-t)**2*y1 + 2*(1-t)*t*self.y + t**2*y2
+
+    def hide(self):
+        self.linewidth = 0
+        self._compute_xy()
+        return self
+
     def plot(self, ax, config):
-        # Needed to store x_values
-        if self.start and self.end: # Why this check? What happens else?
-            x1, y1 = self.start
-            x2, y2 = self.end
-            t = np.linspace(0, 1, 100)
-
-            if self.x1 is not None and self.x2 is not None:
-                # Third-order Bezier curve
-                self.x_values = (1-t)**3 * x1 + 3 * (1-t)**2 * t * self.x1 + 3 * (1-t) * t**2 * self.x2 + t**3 * x2
-                self.y_values = (1-t)**3 * y1 + 3 * (1-t)**2 * t * self.y1 + 3 * (1-t) * t**2 * self.y2 + t**3 * y2
-            else:
-                # Second-order Bezier curve
-                self.x_values = (1-t)**2 * x1 + 2 * (1-t) * t * self.x + t**2 * x2
-                self.y_values = (1-t)**2 * y1 + 2 * (1-t) * t * self.y + t**2 * y2
-
+        if self.start and self.end:
+            if hasattr(self, '_connect_process1'):
+                ip = self._find_intersection(self._connect_process1, self._connect_process2)
+                if ip:
+                    self.x, self.y = ip
+            self._compute_xy()
             super().plot(ax, config)
 
     def get_point(self, n):
-        if self.start and self.end: # Why this check? What happens else?
-            x1, y1 = self.start
-            x2, y2 = self.end
-            t = np.linspace(0, 1, 100)
-
-            if self.x1 is not None and self.x2 is not None:
-                # Third-order Bezier curve
-                self.x_values = (1-t)**3 * x1 + 3 * (1-t)**2 * t * self.x1 + 3 * (1-t) * t**2 * self.x2 + t**3 * x2
-                self.y_values = (1-t)**3 * y1 + 3 * (1-t)**2 * t * self.y1 + 3 * (1-t) * t**2 * self.y2 + t**3 * y2
-            else:
-                # Second-order Bezier curve
-                self.x_values = (1-t)**2 * x1 + 2 * (1-t) * t * self.x + t**2 * x2
-                self.y_values = (1-t)**2 * y1 + 2 * (1-t) * t * self.y + t**2 * y2
-
-            self.coordinates = list(zip(self.x_values, self.y_values))
+        if not hasattr(self, 'x_values'):
+            self._compute_xy()
+        self.coordinates = list(zip(self.x_values, self.y_values))
         if 0 <= n < len(self.coordinates):
             return self.coordinates[n][0], self.coordinates[n][1]
         else:
             raise IndexError("Index out of the range of Bezier curve points.")
 
     def get_coordinates(self):
+        if not hasattr(self, 'x_values'):
+            self._compute_xy()
         self.coordinates = list(zip(self.x_values, self.y_values))
         if self.coordinates:
-            # Split the list of tuples into two lists for x and y coordinates
             x_values, y_values = zip(*self.coordinates)
             return x_values, y_values
         else:
-            return [], []  # Return empty lists if there are no coordinates
+            return [], []
 
 
 class Parabola(Process):

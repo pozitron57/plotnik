@@ -1,7 +1,9 @@
 import subprocess
+import os
+import shutil
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
-from matplotlib.patches import FancyArrowPatch
+
 import numpy as np
 from .processes import Process
 from .global_drawing import GLOBAL_DRAWING
@@ -13,8 +15,8 @@ class Drawing:
                        'fontsize': 34,
                        'lw': 3.2,
                        'aspect': 1,
-                       'xlim': [0, 10.7],
-                       'ylim': [0, 10.7],
+                       'xlim': [0, 11.2],
+                       'ylim': [0, 11.2],
                        'xname': '',
                        'yname': '',
                        'yname_y': None,
@@ -26,7 +28,7 @@ class Drawing:
                        'zero_ofst': None,
                        'axes_arrow_width': None,  # Set axes arrows width
                        'axes_arrow_length': None, # Set axes arrows length
-                       'axes_arrow_scale': 1,     # Scale axes arrows by a factor
+                       'axes_arrow_scale': 0.75,     # Scale axes arrows by a factor
                        'arrow_size': 27,          # Default arrows size for processes
                        'tick_width': None,
                        'tick_length': None,
@@ -37,6 +39,8 @@ class Drawing:
                        'y_gap_size': 0.05,
                        }
         self.grid_config = {}  # Initialization of grid_config as an empty dictionary.
+        self._xtick_label_texts = []  # text objects from add_xticks(), repositioned in show()
+        self._ytick_label_texts = []  # text objects from add_yticks(), repositioned in show()
         self.fig = None
         self.ax = None
 
@@ -292,17 +296,15 @@ class Drawing:
             #x_label = f"${x_label}$"
 
             if bg:
-                # Set background for a ticklabel
                 bg_params = {'boxstyle': 'round,pad=0.1', 'facecolor': bgcolor, 'edgecolor': 'none', 'alpha': 1}
                 if bgsize:
                     bg_params['boxstyle'] = f'round,pad={bgsize}'
-                # Add the text with a background
-                self.ax.text(x, -xlabel_ofst[1], x_label, va='baseline', ha='center', 
-                             fontsize=self.config['fontsize'], bbox=bg_params)
+                txt = self.ax.text(x, -xlabel_ofst[1], x_label, va='baseline', ha='center',
+                                   fontsize=self.config['fontsize'], bbox=bg_params)
             else:
-                # Add the text without a background
-                self.ax.text(x, -xlabel_ofst[1], x_label, va='baseline', ha='center', 
-                             fontsize=self.config['fontsize'])
+                txt = self.ax.text(x, -xlabel_ofst[1], x_label, va='baseline', ha='center',
+                                   fontsize=self.config['fontsize'])
+            self._xtick_label_texts.append(txt)
 
             # Рисование штриха
             if direction == 'out':
@@ -341,8 +343,9 @@ class Drawing:
             if isinstance(y, (int, float)):
                 y_label = f"{y_label}".replace('.', ',')
             y_label = f"${y_label}$"
-            self.ax.text(-ylabel_ofst[0], y, y_label, va='center', ha='right',
-                         fontsize=self.config['fontsize'])
+            _yt = self.ax.text(-ylabel_ofst[0], y, y_label, va='center', ha='right',
+                               fontsize=self.config['fontsize'])
+            self._ytick_label_texts.append(_yt)
 
             # Draw a tick line
             if direction == 'out':
@@ -365,6 +368,10 @@ class Drawing:
 
         xlim = self.config.get('xlim', self.ax.get_xlim())
         ylim = self.config.get('ylim', self.ax.get_ylim())
+
+        self.ax.set_xlim([xlim[0], xlim[1]])
+        self.ax.set_ylim([ylim[0], ylim[1]])
+
 
         # Set aspect
         if 'aspect' in self.config:
@@ -406,210 +413,137 @@ class Drawing:
                 hl_x = axes_arrow_length * k
                 hl_y = axes_arrow_length / aspect * k
 
-        axes_arrow_scale = self.config.get('axes_arrow_scale', 1)
+        axes_arrow_scale = self.config.get('axes_arrow_scale', 0.75)
+        # mutation_scale in pts keeps arrowhead physically consistent across all xlim/aspect values.
+        # ax.annotate places the tip exactly at xy; FancyArrowPatch+mutation_aspect misplaces it.
+        arrow_ms = self.config['fontsize'] / 2 * axes_arrow_scale
+        ap_kw = dict(lw=lw, color='k', mutation_scale=arrow_ms, shrinkA=0, shrinkB=0)
+        arrowstyle_axes = "-|>,head_length=1,head_width=0.4"
 
-        ## X axis
-        #arrowstyle_x = f"-|>,head_length={hl_x},head_width={hw_x}"
-        #arrow_x = FancyArrowPatch((xlim[0], 0), (xlim[1], 0),
-                                  #clip_on=False,
-                                  #arrowstyle=arrowstyle_x,
-                                  #mutation_scale = 200 / xlen * axes_arrow_scale,
-                                  #mutation_aspect=aspect,
-                                  #shrinkA=0,
-                                  #shrinkB=0,
-                                  #lw=lw, color='k', zorder=5)
-        #self.ax.add_patch(arrow_x)
+        # Convert arrowhead length (arrow_ms pts) to data units so the arrowhead
+        # base sits exactly at xlim[1]/ylim[1] and the tip extends beyond.
+        self.ax.apply_aspect()  # finalise axes box after set_aspect
+        _tr = self.ax.transData
+        _pxpt = self.fig.dpi / 72  # pixels per point
+        _ox, _oy = _tr.transform((xlim[0], ylim[0]))
+        _ex, _ey = _tr.transform((xlim[1], ylim[1]))
+        _ax_px_w = abs(_ex - _ox)
+        _ax_px_h = abs(_ey - _oy)
+        head_data_x = arrow_ms * _pxpt * xlen / _ax_px_w if _ax_px_w else 0
+        head_data_y = arrow_ms * _pxpt * ylen / _ax_px_h if _ax_px_h else 0
 
-        # Set x_gap
+        # Consistent y-position for xtick labels and xname:
+        # tick_length (pts) + tick_pad + cap_height below x-axis, same formula for both.
+        _tick_len_pts = self.config['tick_length'] if self.config['tick_length'] is not None else 6.5
+        _xtick_pts = _tick_len_pts + plt.rcParams.get('xtick.major.pad', 3.5) + self.config['fontsize'] * 0.7
+        _x0d = _tr.transform((0, 0))
+        _xtick_y = _tr.inverted().transform((_x0d[0], _x0d[1] - _xtick_pts * _pxpt))[1]
+
+        # Reposition labels drawn by add_xticks() with the now-finalised transform
+        for _t in self._xtick_label_texts:
+            _t.set_y(_xtick_y)
+
+        # Consistent x-position for ytick labels and yname (display-space formula).
+        _ytick_pts = _tick_len_pts + plt.rcParams.get('ytick.major.pad', 3.5)
+        _y0d = _tr.transform((0, 0))
+        _ytick_x = _tr.inverted().transform((_y0d[0] - _ytick_pts * _pxpt, _y0d[1]))[0]
+
+        for _t in self._ytick_label_texts:
+            _t.set_x(_ytick_x)
+
+        # X axis
         x_gap = self.config.get('x_gap', None)
         x_gap_size = self.config.get('x_gap_size', 0.05) * xlen
-        x_gap_margin = x_gap_size * 0.5  # Small gap before and after the dots
-        
+        x_gap_margin = x_gap_size * 0.5
+
         if x_gap is not None:
-            arrow_x_segments = [
-                ((xlim[0], 0), (x_gap - x_gap_size / 2 - x_gap_margin, 0)),
-                ((x_gap + x_gap_size / 2 + x_gap_margin, 0), (xlim[1] - hl_x, 0))  # Adjust to avoid double arrow
-            ]
-        else:
-            arrow_x_segments = [((xlim[0], 0), (xlim[1] - hl_x, 0))]  # Adjust to add arrow
-        
-        # Draw X axis segments
-        arrowstyle_x = f"-|>,head_length={hl_x},head_width={hw_x}"
-        for i, (start, end) in enumerate(arrow_x_segments):
-            if i == len(arrow_x_segments) - 1:
-                # Add arrow to the last segment
-                arrow_x = FancyArrowPatch(start, end,
-                                          clip_on=False,
-                                          arrowstyle=arrowstyle_x,
-                                          mutation_scale=200 / xlen * axes_arrow_scale,
-                                          mutation_aspect=aspect,
-                                          shrinkA=0,
-                                          shrinkB=0,
-                                          lw=lw, color='k', zorder=5)
-            else:
-                # Add regular line segments
-                arrow_x = FancyArrowPatch(start, end,
-                                          clip_on=False,
-                                          arrowstyle='-',
-                                          mutation_scale=200 / xlen * axes_arrow_scale,
-                                          mutation_aspect=aspect,
-                                          shrinkA=0,
-                                          shrinkB=0,
-                                          lw=lw, color='k', zorder=5)
-            self.ax.add_patch(arrow_x)
-        
-        # Add dots to indicate the gap on X axis
-        if x_gap is not None:
-            dot_size = lw * 1.2  # Adjust dot size
+            self.ax.plot([xlim[0], x_gap - x_gap_size / 2 - x_gap_margin], [0, 0],
+                         'k-', lw=lw, clip_on=False, zorder=5)
+            self.ax.annotate('',
+                xy=(xlim[1] + head_data_x, 0),
+                xytext=(x_gap + x_gap_size / 2 + x_gap_margin, 0),
+                xycoords='data', textcoords='data',
+                arrowprops=dict(arrowstyle=arrowstyle_axes, **ap_kw),
+                annotation_clip=False)
+            dot_size = lw * 1.2
             self.ax.plot(x_gap - x_gap_size / 2, 0, 'ko', markersize=dot_size, clip_on=False)
             self.ax.plot(x_gap, 0, 'ko', markersize=dot_size, clip_on=False)
             self.ax.plot(x_gap + x_gap_size / 2, 0, 'ko', markersize=dot_size, clip_on=False)
-        
-            # Add small gaps before and after the dots
             self.ax.plot(x_gap - x_gap_size / 2 - x_gap_margin, 0, 'w|', markersize=dot_size * 1.5, clip_on=False, linewidth=lw)
             self.ax.plot(x_gap + x_gap_size / 2 + x_gap_margin, 0, 'w|', markersize=dot_size * 1.5, clip_on=False, linewidth=lw)
+        else:
+            self.ax.annotate('',
+                xy=(xlim[1] + head_data_x, 0), xytext=(xlim[0], 0),
+                xycoords='data', textcoords='data',
+                arrowprops=dict(arrowstyle=arrowstyle_axes, **ap_kw),
+                annotation_clip=False)
 
-        
-
-
-        # Set y_gap
+        # Y axis
         y_gap = self.config['y_gap']
         y_gap_size = self.config['y_gap_size'] * ylen
-        gap_margin = y_gap_size * 0.5  # Small gap before and after the dots
+        gap_margin = y_gap_size * 0.5
 
         if y_gap is not None:
-            arrow_y_segments = [
-                ((0, ylim[0]), (0, y_gap - y_gap_size / 2 - gap_margin)),
-                ((0, y_gap + y_gap_size / 2 + gap_margin), (0, ylim[1] - 0.08))  # Adjust to avoid double arrow
-            ]
-        else:
-            arrow_y_segments = [((0, ylim[0]), (0, ylim[1] - 0.08))]  # Adjust to add arrow
-
-        # Y axis segments
-        arrowstyle_y = f"-|>,head_length={hl_y},head_width={hw_y}"
-        for i, (start, end) in enumerate(arrow_y_segments):
-            if i == len(arrow_y_segments) - 1:
-                # Add arrow to the last segment
-                arrow_y = FancyArrowPatch(start, end,
-                                          clip_on=False,
-                                          arrowstyle=arrowstyle_y,
-                                          mutation_scale=200 / xlen * axes_arrow_scale,
-                                          mutation_aspect=aspect,
-                                          shrinkA=0,
-                                          shrinkB=0,
-                                          lw=lw, color='k', zorder=5)
-            else:
-                # Add regular line segments
-                arrow_y = FancyArrowPatch(start, end,
-                                          clip_on=False,
-                                          arrowstyle='-',
-                                          mutation_scale=200 / xlen * axes_arrow_scale,
-                                          mutation_aspect=aspect,
-                                          shrinkA=0,
-                                          shrinkB=0,
-                                          lw=lw, color='k', zorder=5)
-            self.ax.add_patch(arrow_y)
-
-        # Add dots to indicate the gap
-        if y_gap is not None:
-            dot_size = lw * 1.2  # Adjust dot size
+            self.ax.plot([0, 0], [ylim[0], y_gap - y_gap_size / 2 - gap_margin],
+                         'k-', lw=lw, clip_on=False, zorder=5)
+            self.ax.annotate('',
+                xy=(0, ylim[1] + head_data_y),
+                xytext=(0, y_gap + y_gap_size / 2 + gap_margin),
+                xycoords='data', textcoords='data',
+                arrowprops=dict(arrowstyle=arrowstyle_axes, **ap_kw),
+                annotation_clip=False)
+            dot_size = lw * 1.2
             self.ax.plot(0, y_gap - y_gap_size / 2, 'ko', markersize=dot_size, clip_on=False)
             self.ax.plot(0, y_gap, 'ko', markersize=dot_size, clip_on=False)
             self.ax.plot(0, y_gap + y_gap_size / 2, 'ko', markersize=dot_size, clip_on=False)
-
-            # Add small gaps before and after the dots
-            self.ax.plot(0, y_gap - y_gap_size / 2 - gap_margin, 'w|', markersize=dot_size*1.5, clip_on=False, linewidth=lw)
-            self.ax.plot(0, y_gap + y_gap_size / 2 + gap_margin, 'w|', markersize=dot_size*1.5, clip_on=False, linewidth=lw)
+            self.ax.plot(0, y_gap - y_gap_size / 2 - gap_margin, 'w|', markersize=dot_size * 1.5, clip_on=False, linewidth=lw)
+            self.ax.plot(0, y_gap + y_gap_size / 2 + gap_margin, 'w|', markersize=dot_size * 1.5, clip_on=False, linewidth=lw)
+        else:
+            self.ax.annotate('',
+                xy=(0, ylim[1] + head_data_y), xytext=(0, ylim[0]),
+                xycoords='data', textcoords='data',
+                arrowprops=dict(arrowstyle=arrowstyle_axes, **ap_kw),
+                annotation_clip=False)
        
 
         # Set labels padding. Used in d.add_xticks() but NOT in d.ax.add_xticks()
         xlabel_ofst = self.config.get('xlabel_ofst', [xlen * 0.02, ylen * 0.14 * self.config['fontsize']/30])
         ylabel_ofst = self.config.get('ylabel_ofst', [xlen * 0.05 * aspect, ylen * 0.03])
 
+        # Draw grid
+        # Essential to do it before xname, yname, otherwise they may be shifted
+        if self.config.get('grid', False):
+            self._add_grid()
 
-        # Add axis labels xname, yname. If xname_ofst, yname_ofst are not
-        # specified, then yname is vertically aligned with ylabels, and xname
-        # is horizontally aligned with xlabels.
-        if self.config['xname_ofst'] is None:
-            x_dx =  xlabel_ofst[0]
-            x_dy = -xlabel_ofst[1]
-        else:
-            x_dx =  self.config['xname_ofst'][0]
-            x_dy =  self.config['xname_ofst'][1]
-
-        # If yname is specified in set_config, add it as a new tick and remove
-        # the tick mark. If yname_y is specified in set_config, add it as a new
-        # tick at the y coordinate and remove the tick mark. If yname_ofst is
-        # specified in set_config, then yname is added not as a tick mark but
-        # through ax.text()
+        # yname: right-aligned with ytick labels, bottom edge at the arrow tip (text above).
+        # xname: baseline aligned with xtick labels, left edge at the arrow tip (text to the right).
+        # yname_y / xname_x override the arrow-tip anchor to a specific coordinate.
+        # yname_ofst / xname_ofst allow fully manual placement via ax.text offset from arrow tip.
         if self.config['yname'] is not None:
-            # If yname_ofst is specified in set_config, then yname is added via ax.text()
             if self.config['yname_ofst'] is not None:
-                arrow_tip_y = ylim[1] - hl_y
-                # Offset for yname, measured from the end of the arrow.
                 yname_offset_x, yname_offset_y = self.config['yname_ofst']
-                # New yname position
-                new_yname_pos_x = -yname_offset_x
-                new_yname_pos_y = arrow_tip_y + yname_offset_y
-                self.ax.text(new_yname_pos_x, new_yname_pos_y,
+                self.ax.text(-yname_offset_x, ylim[1] + head_data_y + yname_offset_y,
                              self.config['yname'], ha='right', va='top',
                              fontsize=self.config['fontsize'])
             else:
-                current_ticks = list(self.ax.get_yticks())
-                current_labels = [tick.get_text() for tick in self.ax.get_yticklabels()]
+                y_pos = self.config['yname_y'] if self.config['yname_y'] is not None else ylim[1] + head_data_y
+                va = 'center' if self.config['yname_y'] is not None else 'bottom'
+                self.ax.text(_ytick_x, y_pos,
+                             self.config['yname'], ha='right', va=va,
+                             fontsize=self.config['fontsize'])
 
-                # Set 'yname' tick at new position if specified
-                if self.config['yname_y'] is not None:
-                    new_tick = self.config['yname_y']
-                else:
-                    new_tick = ylim[1]
-
-                # Add yname as a new ytick
-                if new_tick not in current_ticks:
-                    current_ticks.append(new_tick)
-                    current_labels.append(self.config['yname'])
-                    self.ax.set_yticks(current_ticks)
-                    self.ax.set_yticklabels(current_labels)
-
-                    # Remove a tickmark at yname tick
-                    ticks = self.ax.yaxis.get_major_ticks()
-                    if ticks:
-                        ticks[-1].tick1line.set_markersize(0)
-
-        # Similarly for xname
         if self.config['xname'] is not None:
-            # If xname_ofst is specified in set_config, then yname is added via ax.text()
             if self.config['xname_ofst'] is not None:
-                arrow_tip_x = xlim[1] - hl_x
-                # Offset for xname, measured from the end of the arrow.
                 xname_offset_x, xname_offset_y = self.config['xname_ofst']
-                # New xname position
-                new_xname_pos_x = arrow_tip_x + xname_offset_x
-                new_xname_pos_y = -xname_offset_y
-                self.ax.text(new_xname_pos_x, new_xname_pos_y,
+                self.ax.text(xlim[1] + head_data_x + xname_offset_x, -xname_offset_y,
                              self.config['xname'], ha='right', va='top',
                              fontsize=self.config['fontsize'])
             else:
-                current_xticks = list(self.ax.get_xticks())
-                current_xlabels = [tick.get_text() for tick in self.ax.get_xticklabels()]
-
-                # Set 'xname' tick at new position if specified
-                if self.config['xname_x'] is not None:
-                    new_xtick = self.config['xname_x']
-                else:
-                    new_xtick = xlim[1]
-
-                # Add yname as a new ytick
-                if new_xtick not in current_xticks:
-                    current_xticks.append(new_xtick)
-                    current_xlabels.append(self.config['xname'])
-                    self.ax.set_xticks(current_xticks)
-                    self.ax.set_xticklabels(current_xlabels)
-
-                    # Remove a tickmark at yname tick
-                    xticks = self.ax.xaxis.get_major_ticks()
-                    if xticks:
-                        xticks[-1].tick1line.set_markersize(0)
+                x_pos = self.config['xname_x'] if self.config['xname_x'] is not None else xlim[1] + head_data_x
+                ha = 'center' if self.config['xname_x'] is not None else 'left'
+                self.ax.text(x_pos, _xtick_y,
+                             self.config['xname'], ha=ha, va='baseline',
+                             fontsize=self.config['fontsize'])
 
 
         # Add a zero at the origin if the 'zero' parameter is set to True. If
@@ -641,22 +575,50 @@ class Drawing:
                              fontsize=self.config['fontsize'], ha='right',
                              va='baseline')
 
-        # Draw grid
-        if self.config.get('grid', False):
-            self._add_grid()
-
         plt.show()
 
-    def save(self, filename, **kwargs):
-        plt.margins(x=0, y=0, tight=True)
-        self.fig.savefig(filename, bbox_inches='tight')
+    def save(self, filename, crop=False, **kwargs):
+        for ax in self.fig.axes:
+            ax.margins(x=0, y=0, tight=True)
+            ax.set_facecolor("white")
 
-        # Trim whitespace using Inkscape if 'crop' is specified and True
-        if kwargs.get('crop', False):
-            inkscape_command = [
-                'inkscape', 
-                '--actions', 
-                'select-by-id:patch_1,patch_2;delete;select-all:all;fit-canvas-to-selection;export-filename:' + filename + ';export-do;', 
-                filename
-            ]
-            subprocess.run(inkscape_command)
+        self.fig.patch.set_facecolor("white")
+
+        self.fig.savefig(
+            filename,
+            bbox_inches="tight",
+            pad_inches=0,
+            facecolor="white",
+            edgecolor="white",
+            transparent=False,
+            **kwargs,
+        )
+
+        # Trim whitespace using Inkscape if 'crop' is True (SVG only).
+        # Removes paths named patch_1, patch_2 (they only add a whitespace margin)
+        # and fits the canvas to the drawing.
+        if crop:
+            if not str(filename).lower().endswith('.svg'):
+                print("Warning: crop=True works with SVG files only, skipped.")
+                return
+            inkscape = shutil.which('inkscape') or '/Applications/Inkscape.app/Contents/MacOS/inkscape'
+            if not os.path.exists(inkscape) and shutil.which(inkscape) is None:
+                print("Warning: crop=True requires Inkscape, skipped.")
+                return
+            # --batch-process closes Inkscape after the actions are done. Without it
+            # Inkscape keeps running (there is no 'quit-inkscape' action outside the GUI)
+            # and macOS then reports it as unexpectedly quit on the next launch.
+            try:
+                res = subprocess.run([
+                    inkscape,
+                    '--batch-process',
+                    '--actions',
+                    'select-by-id:patch_1,patch_2;delete;select-all:all;'
+                    'fit-canvas-to-selection;export-filename:' + filename + ';export-do;',
+                    filename,
+                ], timeout=120, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+                if res.returncode != 0:
+                    print("Warning: Inkscape crop failed, file saved uncropped.")
+                    print(res.stderr.decode(errors='replace').strip())
+            except subprocess.TimeoutExpired:
+                print("Warning: Inkscape did not finish in time, file saved uncropped.")
