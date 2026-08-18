@@ -474,11 +474,23 @@ class Drawing:
         _xfmt = self.ax.xaxis.get_major_formatter()
         if isinstance(_xfmt, ScalarFormatter):
             # labels are generated at draw time, so tick positions are what we can check
-            _has_xtick_labels = bool(len(self.ax.get_xticks()))
+            _has_mpl_xtick_labels = bool(len(self.ax.get_xticks()))
         else:
             # labels were set explicitly (possibly to empty strings)
-            _has_xtick_labels = any(t.get_text().strip() for t in self.ax.get_xticklabels())
-        _has_xtick_labels = _has_xtick_labels or bool(self._xtick_label_texts)
+            _has_mpl_xtick_labels = any(t.get_text().strip() for t in self.ax.get_xticklabels())
+        _has_xtick_labels = _has_mpl_xtick_labels or bool(self._xtick_label_texts)
+
+        # Shared baseline for everything written under the x axis when there is no row
+        # of tick labels to join: the gap from the axis is measured on the tallest ink
+        # in that row (usually the '0'), and the x name sits on the same baseline, so a
+        # descender like 'p' hangs below it instead of dragging the whole row down.
+        _row_ink = 0.0
+        if self.config['xname']:
+            _row_ink = self._ink_top(self.config['xname'], self.config['fontsize'])
+        if self.config.get('zero', True):
+            _row_ink = max(_row_ink, self._ink_top('$0$', self.config['fontsize']))
+        _row_y = _tr.inverted().transform(
+            (_x0d[0], _x0d[1] - (_xname_pts + _row_ink) * _pxpt))[1]
 
         # Consistent x-position for ytick labels and yname (display-space formula).
         _ytick_pts = _tick_len_pts + plt.rcParams.get('ytick.major.pad', 3.5)
@@ -599,13 +611,9 @@ class Drawing:
                     # sit on the same baseline as the xtick labels
                     y_pos, va_x = _xtick_y, 'baseline'
                 else:
-                    # nothing to line up with: keep the same gap from the axis as yname.
-                    # Anchor by the baseline shifted down by the measured ink height, so
-                    # the visible gap does not depend on how tall the glyphs are.
-                    _ink = self._ink_top(self.config['xname'], self.config['fontsize'])
-                    _y_pts = _xname_pts + _ink
-                    y_pos = _tr.inverted().transform((_x0d[0], _x0d[1] - _y_pts * _pxpt))[1]
-                    va_x = 'baseline'
+                    # no tick-label row to join: sit on the shared baseline computed
+                    # above, which keeps the same gap from the axis as yname has
+                    y_pos, va_x = _row_y, 'baseline'
                 self.ax.text(x_pos, y_pos,
                              self.config['xname'], ha=ha, va=va_x,
                              fontsize=self.config['fontsize'])
@@ -619,7 +627,15 @@ class Drawing:
         if self.config.get('zero', True):
             zero_ofst = self.config.get('zero_ofst', [0.3, 0.3])
 
-            if self.config['zero_ofst'] is None:
+            if self.config['zero_ofst'] is None and not _has_mpl_xtick_labels:
+                # No matplotlib tick labels to join: draw the zero as text on the shared
+                # baseline (the tick machinery anchors labels by the top of their box,
+                # which would put the zero lower than the x name).
+                _zero_y = _xtick_y if self._xtick_label_texts else _row_y
+                self.ax.text(-self.config.get('zero_x', 0), _zero_y, '$0$',
+                             fontsize=self.config['fontsize'], ha='center', va='baseline')
+
+            elif self.config['zero_ofst'] is None:
                 # Add zero as a new x tick 
                 current_xticks = list(self.ax.get_xticks())
                 current_xlabels = [tick.get_text() for tick in self.ax.get_xticklabels()]
