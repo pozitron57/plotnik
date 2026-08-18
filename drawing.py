@@ -527,7 +527,8 @@ class Drawing:
                              fontsize=self.config['fontsize'])
             else:
                 y_pos = self.config['yname_y'] if self.config['yname_y'] is not None else ylim[1] + head_data_y
-                va = 'center' if self.config['yname_y'] is not None else 'bottom'
+                # default: top edge of the label is level with the arrow tip
+                va = 'center' if self.config['yname_y'] is not None else 'top'
                 self.ax.text(_ytick_x, y_pos,
                              self.config['yname'], ha='right', va=va,
                              fontsize=self.config['fontsize'])

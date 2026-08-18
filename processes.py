@@ -16,6 +16,7 @@ class Process:
         self.linestyle = '-'
         self.zorder = 1
         self.linewidth = 2.5
+        self.clip_on = True   # a thick slanted line usually looks better cut at the axes
         self.extra_lines = [] # to store tox(), toy(), tozero() information
         self.xtick_labels = []
         self.ytick_labels = []
@@ -111,9 +112,16 @@ class Process:
     def zord(self, zorder):
         self.zorder = zorder
         return self
+
+    def clip(self, flag=True):
+        # clip(False) lets the line stick out beyond xlim/ylim
+        self.clip_on = flag
+        return self
     
     def dot(self, pos='end', **kwargs):
-        default_params = {'size': 8, 'color': 'black', 'zorder': 5}
+        # clip_on=False by default: a dot sitting exactly on an axis would
+        # otherwise be cut in half by the axes bbox. Pass clip_on=True to clip it.
+        default_params = {'size': 8, 'color': 'black', 'zorder': 5, 'clip_on': False}
         # Add user specified parameters to default parameters
         dot_params = {**default_params, **kwargs}
 
@@ -135,6 +143,7 @@ class Process:
                             markersize=self.dots_params[position].get('size', 6),
                             color=self.dots_params[position].get('color', 'k'),
                             zorder=self.dots_params[position].get('zorder', '5'),
+                            clip_on=self.dots_params[position].get('clip_on', False),
                             )
 
     def calculate_ofst(self, point=None):
@@ -295,7 +304,7 @@ class Process:
         if hasattr(self, 'x_values') and hasattr(self, 'y_values'):
             ax.plot(self.x_values, self.y_values, color=self.color,
                     linestyle=self.linestyle, linewidth=self.linewidth,
-                    zorder=self.zorder)
+                    zorder=self.zorder, clip_on=self.clip_on)
             if self.arrow_params:
                 self._add_arrow(ax, self.x_values, self.y_values)
             self._add_dots(ax)
@@ -321,8 +330,8 @@ class State(Process):
         self.start = (x, y)  # For State, there's only a start point (same as the end point)
         return self
 
-    def dot(self, size=6, color='k'):
-        self.dot_params = {'size': size, 'color': color}
+    def dot(self, size=6, color='k', clip_on=False):
+        self.dot_params = {'size': size, 'color': color, 'clip_on': clip_on}
         self.draw_dot = True
         return self
 
@@ -334,7 +343,9 @@ class State(Process):
 
         # Drawing the point
         if self.draw_dot:
-            ax.plot(x, y, 'o', markersize=self.dot_params['size'], color=self.dot_params['color'])
+            ax.plot(x, y, 'o', markersize=self.dot_params['size'],
+                    color=self.dot_params['color'],
+                    clip_on=self.dot_params.get('clip_on', False))
 
         ## If a label is provided, draw it
         self._add_labels(ax, config)
