@@ -4,6 +4,9 @@ import shutil
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
 from matplotlib.patches import Rectangle
+from matplotlib.ticker import ScalarFormatter
+from matplotlib.textpath import TextPath
+from matplotlib.font_manager import FontProperties
 
 import numpy as np
 from .processes import Process
@@ -359,6 +362,22 @@ class Drawing:
             self.ax.plot([start, 0], [y, y], 'k-', clip_on=False, linewidth=self.config['lw'] * 0.8)
 
 
+    @staticmethod
+    def _ink_top(text, fontsize):
+        """Height of the actual glyphs above the baseline, in points.
+
+        va='top' aligns the layout box, which leaves the font's ascent as an extra
+        gap above short glyphs ('t' sinks, 'F' does not). Measuring the ink makes the
+        visual gap the same for any label."""
+        try:
+            tp = TextPath((0, 0), text, size=fontsize, prop=FontProperties(), usetex=False)
+            ext = tp.get_extents()
+            if ext.height > 0:
+                return ext.y1
+        except Exception:
+            pass
+        return fontsize * 0.7   # cap-height fallback
+
     def show(self):
         if GLOBAL_DRAWING.drawing is self:
             GLOBAL_DRAWING.release_processes()
@@ -439,10 +458,25 @@ class Drawing:
         _xtick_pts = _tick_len_pts + plt.rcParams.get('xtick.major.pad', 3.5) + self.config['fontsize'] * 0.7
         _x0d = _tr.transform((0, 0))
         _xtick_y = _tr.inverted().transform((_x0d[0], _x0d[1] - _xtick_pts * _pxpt))[1]
+        # top edge position for a label hugging the x axis: same gap as ytick labels use
+        _xname_pts = _tick_len_pts + plt.rcParams.get('xtick.major.pad', 3.5)
+        _xname_y = _tr.inverted().transform((_x0d[0], _x0d[1] - _xname_pts * _pxpt))[1]
 
         # Reposition labels drawn by add_xticks() with the now-finalised transform
         for _t in self._xtick_label_texts:
             _t.set_y(_xtick_y)
+
+        # Does the x axis carry any tick labels? With the default ScalarFormatter the
+        # texts appear only at draw time, so tick positions are the best signal; when
+        # labels were set explicitly (including empty strings) they are authoritative.
+        _xfmt = self.ax.xaxis.get_major_formatter()
+        if isinstance(_xfmt, ScalarFormatter):
+            # labels are generated at draw time, so tick positions are what we can check
+            _has_xtick_labels = bool(len(self.ax.get_xticks()))
+        else:
+            # labels were set explicitly (possibly to empty strings)
+            _has_xtick_labels = any(t.get_text().strip() for t in self.ax.get_xticklabels())
+        _has_xtick_labels = _has_xtick_labels or bool(self._xtick_label_texts)
 
         # Consistent x-position for ytick labels and yname (display-space formula).
         _ytick_pts = _tick_len_pts + plt.rcParams.get('ytick.major.pad', 3.5)
@@ -543,8 +577,19 @@ class Drawing:
             else:
                 x_pos = self.config['xname_x'] if self.config['xname_x'] is not None else xlim[1] + head_data_x
                 ha = 'center' if self.config['xname_x'] is not None else 'left'
-                self.ax.text(x_pos, _xtick_y,
-                             self.config['xname'], ha=ha, va='baseline',
+                if _has_xtick_labels:
+                    # sit on the same baseline as the xtick labels
+                    y_pos, va_x = _xtick_y, 'baseline'
+                else:
+                    # nothing to line up with: keep the same gap from the axis as yname.
+                    # Anchor by the baseline shifted down by the measured ink height, so
+                    # the visible gap does not depend on how tall the glyphs are.
+                    _ink = self._ink_top(self.config['xname'], self.config['fontsize'])
+                    _y_pts = _xname_pts + _ink
+                    y_pos = _tr.inverted().transform((_x0d[0], _x0d[1] - _y_pts * _pxpt))[1]
+                    va_x = 'baseline'
+                self.ax.text(x_pos, y_pos,
+                             self.config['xname'], ha=ha, va=va_x,
                              fontsize=self.config['fontsize'])
 
 
