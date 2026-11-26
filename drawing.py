@@ -3,12 +3,12 @@ import os
 import shutil
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
-from matplotlib.patches import Rectangle
 from matplotlib.ticker import ScalarFormatter
 from matplotlib.textpath import TextPath
 from matplotlib.font_manager import FontProperties
 
 import numpy as np
+from ._clipping import clip_curves
 from .processes import Process
 from .global_drawing import GLOBAL_DRAWING
 
@@ -656,17 +656,8 @@ class Drawing:
                              fontsize=self.config['fontsize'], ha='right',
                              va='baseline')
 
-        # Clip curves to the configured xlim/ylim rectangle instead of the axes box.
-        # The axes box can be wider than the data range (a zero_x tick, for instance,
-        # expands the view), and then a thick line starting at x=0 sticks out to the
-        # left of the y axis. Artists with clip_on=False (dots, grid, ticks) are left
-        # alone, so .clip(False) / clip_on=False still lets a line run past the axes.
-        clip_rect = Rectangle((xlim[0], ylim[0]), xlen, ylen,
-                              transform=self.ax.transData,
-                              facecolor='none', edgecolor='none')
-        for artist in list(self.ax.lines) + list(self.ax.collections):
-            if artist.get_clip_on():
-                artist.set_clip_path(clip_rect)
+        # Use the configured data limits even when a shifted zero tick expands the view.
+        clip_curves(self.ax, xlim, ylim)
 
         plt.show()
 
